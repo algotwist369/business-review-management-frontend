@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const baseURL = 'http://localhost:5000/api';
+const baseURL = `https://brm.api.d0s369.co.in/api` || 'http://localhost:5000/api';
 
 const apiClient = axios.create({
     baseURL,

@@ -15,7 +15,7 @@ const queryClient = new QueryClient({
   },
 })
 
-const GOOGLE_CLIENT_ID = "437429633678-mosk9iguvlap3htfu3nd6qh50sgvq05j.apps.googleusercontent.com"
+const GOOGLE_CLIENT_ID = "1035838949713-7atp6lfctnsk8modn8r537ce7mbo1snn.apps.googleusercontent.com"
 
 createRoot(document.getElementById('root')).render(
   <BrowserRouter>
