@@ -23,7 +23,7 @@ const AddReviewModal = ({ showModal, setShowModal, initialData = null }) => {
     const [reviewCount, setReviewCount] = useState('')
     const [reviewLink, setReviewLink] = useState('')
 
-    const { data: businessData, isLoading: businessesLoading } = useBusinesses({ limit: 100 })
+    const { data: businessData, isLoading: businessesLoading } = useBusinesses({ limit: 1000 })
     const addReviewMutation = useAddReview()
     const editReviewMutation = useEditReview()
 
