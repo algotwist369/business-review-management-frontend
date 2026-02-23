@@ -20,13 +20,21 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import SearchIcon from '@mui/icons-material/Search'
+import GroupsIcon from '@mui/icons-material/Groups'
+import { Select, MenuItem } from '@mui/material'
 import { useUsers, useUpdateUserStatus, useDeleteUser } from '../../hooks/useUsers'
+import { useUpdateUserRole } from '../../hooks/useSuperAdmin'
+import UserAssignmentModal from './UserAssignmentModal'
 
-const AdminUsersTable = ({ onViewReviews }) => {
+const AdminUsersTable = ({ onViewReviews, user: currentUser }) => {
     const [search, setSearch] = useState('')
     const [page, setPage] = useState(0)
     const [rowsPerPage, setRowsPerPage] = useState(5)
     const [selected, setSelected] = useState([])
+    const [assignmentModalOpen, setAssignmentModalOpen] = useState(false)
+    const [selectedAdmin, setSelectedAdmin] = useState(null)
+
+    const isSuperAdmin = currentUser?.role === 'super_admin'
 
     const { data, isLoading, isError, error } = useUsers({
         page: page + 1,
@@ -35,6 +43,7 @@ const AdminUsersTable = ({ onViewReviews }) => {
 
     const updateStatusMutation = useUpdateUserStatus()
     const deleteUserMutation = useDeleteUser()
+    const updateRoleMutation = useUpdateUserRole()
 
     const rows = data?.data || []
     const totalCount = data?.total || 0
@@ -48,6 +57,17 @@ const AdminUsersTable = ({ onViewReviews }) => {
             deleteUserMutation.mutate(id)
         }
     }
+
+    const handleRoleChange = (id, newRole) => {
+        updateRoleMutation.mutate({ id, role: newRole })
+    }
+
+    const handleOpenAssignment = (admin) => {
+        setSelectedAdmin(admin)
+        setAssignmentModalOpen(true)
+    }
+
+    // ... rest of the helper functions ...
 
     const handleSelectAll = (event) => {
         if (event.target.checked) {
@@ -200,22 +220,46 @@ const AdminUsersTable = ({ onViewReviews }) => {
                                 </TableCell>
 
                                 <TableCell>
-                                    <Box
-                                        sx={{
-                                            display: 'inline-block',
-                                            px: 1.5,
-                                            py: 0.5,
-                                            borderRadius: 1,
-                                            fontSize: '0.75rem',
-                                            fontWeight: 'bold',
-                                            textTransform: 'uppercase',
-                                            backgroundColor: row.role === 'admin' ? 'rgba(255, 193, 7, 0.1)' : 'rgba(33, 150, 243, 0.1)',
-                                            color: row.role === 'admin' ? '#ffc107' : '#2196f3',
-                                            border: `1px solid ${row.role === 'admin' ? '#ffc107' : '#2196f3'}`,
-                                        }}
-                                    >
-                                        {row.role}
-                                    </Box>
+                                    {isSuperAdmin && row.role !== 'super_admin' ? (
+                                        <Select
+                                            value={row.role}
+                                            onChange={(e) => handleRoleChange(row._id, e.target.value)}
+                                            size="small"
+                                            sx={{
+                                                color: row.role === 'admin' ? '#ffc107' : '#2196f3',
+                                                '& .MuiOutlinedInput-notchedOutline': {
+                                                    borderColor: row.role === 'admin' ? '#ffc107' : '#2196f3',
+                                                },
+                                                '& .MuiSvgIcon-root': {
+                                                    color: row.role === 'admin' ? '#ffc107' : '#2196f3',
+                                                },
+                                                fontSize: '0.75rem',
+                                                fontWeight: 'bold',
+                                                textTransform: 'uppercase',
+                                                height: 30
+                                            }}
+                                        >
+                                            <MenuItem value="user">User</MenuItem>
+                                            <MenuItem value="admin">Admin</MenuItem>
+                                        </Select>
+                                    ) : (
+                                        <Box
+                                            sx={{
+                                                display: 'inline-block',
+                                                px: 1.5,
+                                                py: 0.5,
+                                                borderRadius: 1,
+                                                fontSize: '0.75rem',
+                                                fontWeight: 'bold',
+                                                textTransform: 'uppercase',
+                                                backgroundColor: row.role === 'admin' ? 'rgba(255, 193, 7, 0.1)' : (row.role === 'super_admin' ? 'rgba(156, 39, 176, 0.1)' : 'rgba(33, 150, 243, 0.1)'),
+                                                color: row.role === 'admin' ? '#ffc107' : (row.role === 'super_admin' ? '#9c27b0' : '#2196f3'),
+                                                border: `1px solid ${row.role === 'admin' ? '#ffc107' : (row.role === 'super_admin' ? '#9c27b0' : '#2196f3')}`,
+                                            }}
+                                        >
+                                            {row.role}
+                                        </Box>
+                                    )}
                                 </TableCell>
 
                                 <TableCell sx={{ color: '#ddd' }} align="center">
@@ -247,6 +291,15 @@ const AdminUsersTable = ({ onViewReviews }) => {
 
                                 <TableCell align="center">
                                     <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
+                                        {isSuperAdmin && row.role === 'admin' && (
+                                            <IconButton
+                                                onClick={() => handleOpenAssignment(row)}
+                                                sx={{ color: '#4caf50' }}
+                                                title="Assign Users"
+                                            >
+                                                <GroupsIcon />
+                                            </IconButton>
+                                        )}
                                         <IconButton
                                             onClick={() => onViewReviews(row)}
                                             sx={{ color: '#2196f3' }}
@@ -268,6 +321,12 @@ const AdminUsersTable = ({ onViewReviews }) => {
                     </TableBody>
                 </Table>
             </TableContainer>
+
+            <UserAssignmentModal
+                open={assignmentModalOpen}
+                onClose={() => setAssignmentModalOpen(false)}
+                admin={selectedAdmin}
+            />
 
             {/* 📄 Pagination */}
             <TablePagination

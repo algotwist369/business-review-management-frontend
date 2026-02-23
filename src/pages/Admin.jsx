@@ -52,7 +52,7 @@ const Admin = ({ user }) => {
         {activeTab === 0 && (
           <Box>
             <Typography variant="h6" sx={{ mb: 2 }}>User Management</Typography>
-            <AdminUsersTable onViewReviews={handleViewReviews} />
+            <AdminUsersTable onViewReviews={handleViewReviews} user={user} />
           </Box>
         )}
         {activeTab === 1 && (

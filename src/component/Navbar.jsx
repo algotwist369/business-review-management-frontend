@@ -25,7 +25,7 @@ const Navbar = ({ onLoginClick, user, onLogout }) => {
               <Typography variant="body2" sx={{ color: '#aaa' }}>
                 {user.email}
               </Typography>
-              {user.role === 'admin' && (
+              {['admin', 'super_admin'].includes(user.role) && (
                 <Button component={Link} to="/admin" color="inherit">
                   Admin
                 </Button>

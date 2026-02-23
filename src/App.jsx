@@ -27,7 +27,7 @@ const App = () => {
         localStorage.setItem('user', JSON.stringify(data.user))
         localStorage.setItem('token', data.token)
         setLoginOpen(false)
-        if (data.user.role === 'admin') {
+        if (['admin', 'super_admin'].includes(data.user.role)) {
           navigate('/admin')
         } else {
           navigate('/')
@@ -60,7 +60,7 @@ const App = () => {
         <Route path="/" element={<Home onLoginClick={() => setLoginOpen(true)} user={user} />} />
         <Route
           path="/admin"
-          element={user?.role === 'admin' ? <Admin user={user} /> : <Home onLoginClick={() => setLoginOpen(true)} user={user} />}
+          element={['admin', 'super_admin'].includes(user?.role) ? <Admin user={user} /> : <Home onLoginClick={() => setLoginOpen(true)} user={user} />}
         />
         <Route path="*" element={<div><h1>404 Not Found</h1></div>} />
       </Routes>

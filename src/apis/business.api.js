@@ -3,8 +3,8 @@ import apiClient from './apiClient';
 // Admin only operations
 export const addBusiness = (data) => apiClient.post('/business', data);
 
-export const getAllBusinesses = ({ page = 1, limit = 10 }) =>
-    apiClient.get('/business', { params: { page, limit } });
+export const getAllBusinesses = ({ page = 1, limit = 10, search = '' }) =>
+    apiClient.get('/business', { params: { page, limit, search } });
 
 export const editBusiness = (id, data) => apiClient.put(`/business/${id}`, data);
 

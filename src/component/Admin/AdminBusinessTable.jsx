@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
     Table,
     TableBody,
@@ -27,12 +27,27 @@ export default function AdminBusinessTable() {
     const [page, setPage] = useState(0)
     const [rowsPerPage, setRowsPerPage] = useState(10)
     const [search, setSearch] = useState('')
+    const [debouncedSearch, setDebouncedSearch] = useState('')
     const [modalOpen, setModalOpen] = useState(false)
     const [editingBusiness, setEditingBusiness] = useState(null)
 
-    const { data, isLoading, isError, error } = useBusinesses({
+    // Debounce search effect: only trigger server search 500ms after last keystroke
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search)
+        }, 500)
+        return () => clearTimeout(timer)
+    }, [search])
+
+    // Reset pagination when search changes
+    useEffect(() => {
+        setPage(0)
+    }, [debouncedSearch])
+
+    const { data, isLoading, isFetching, isError, error } = useBusinesses({
         page: page + 1,
         limit: rowsPerPage,
+        search: debouncedSearch,
     })
 
     const addMutation = useAddBusiness()
@@ -81,35 +96,41 @@ export default function AdminBusinessTable() {
         setPage(0)
     }
 
-    if (isLoading) return <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}><CircularProgress /></Box>
+    // Only show full-screen spinner on first load. 
+    // During search (isFetching), the table remains visible and a smaller spinner is shown near search box.
+    if (isLoading && !isFetching) return <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}><CircularProgress /></Box>
     if (isError) return <Typography color="error" sx={{ p: 5 }}>Error: {error?.message || 'Something went wrong'}</Typography>
 
     const businesses = data?.data || []
     const totalCount = data?.total || 0
+
     return (
         <Paper sx={{ p: 3, backgroundColor: '#121212', color: '#fff', borderRadius: 3 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <TextField
-                    size="small"
-                    placeholder="Search Business..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    sx={{
-                        input: { color: '#fff' },
-                        '& .MuiOutlinedInput-root': {
-                            '& fieldset': { borderColor: '#444' },
-                            '&:hover fieldset': { borderColor: '#666' },
-                            '&.Mui-focused fieldset': { borderColor: '#fff' },
-                        },
-                    }}
-                    InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <SearchIcon sx={{ color: '#aaa' }} />
-                            </InputAdornment>
-                        ),
-                    }}
-                />
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <TextField
+                        size="small"
+                        placeholder="Search Business..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        sx={{
+                            input: { color: '#fff' },
+                            '& .MuiOutlinedInput-root': {
+                                '& fieldset': { borderColor: '#444' },
+                                '&:hover fieldset': { borderColor: '#666' },
+                                '&.Mui-focused fieldset': { borderColor: '#fff' },
+                            },
+                        }}
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <SearchIcon sx={{ color: '#aaa' }} />
+                                </InputAdornment>
+                            ),
+                        }}
+                    />
+                    {isFetching && <CircularProgress size={20} sx={{ color: '#fff' }} />}
+                </Box>
                 <ButtonComponent text="Add Business" onClick={() => handleOpenModal()} />
             </Box>
 

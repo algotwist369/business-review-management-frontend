@@ -21,7 +21,7 @@ const Home = ({ onLoginClick, user }) => {
                         onEdit={handleEdit}
                         setShowModal={setShowModal}
                         userId={user._id || user.id}
-                        isAdmin={user?.role === 'admin'}
+                        isAdmin={['admin', 'super_admin'].includes(user?.role)}
                     />
 
                     <AddReviewModal
