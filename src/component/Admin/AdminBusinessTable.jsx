@@ -19,6 +19,7 @@ import {
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import SearchIcon from '@mui/icons-material/Search'
+import LinkIcon from '@mui/icons-material/Link'
 import ButtonComponent from '../ButtonComponent'
 import BusinessFormModal from './BusinessFormModal'
 import { useBusinesses, useAddBusiness, useEditBusiness, useDeleteBusiness, useUpdateBusinessStatus } from '../../hooks/useBusinesses'
@@ -96,7 +97,6 @@ export default function AdminBusinessTable() {
         setPage(0)
     }
 
-    // Only show full-screen spinner on first load. 
     // During search (isFetching), the table remains visible and a smaller spinner is shown near search box.
     if (isLoading && !isFetching) return <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}><CircularProgress /></Box>
     if (isError) return <Typography color="error" sx={{ p: 5 }}>Error: {error?.message || 'Something went wrong'}</Typography>
@@ -110,7 +110,7 @@ export default function AdminBusinessTable() {
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <TextField
                         size="small"
-                        placeholder="Search Business..."
+                        placeholder="Search by Name, Location, or Code..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         sx={{
@@ -140,8 +140,9 @@ export default function AdminBusinessTable() {
                         <TableRow sx={{ backgroundColor: '#1e1e1e' }}>
                             <TableCell sx={{ color: '#fff' }}><strong>Business Name</strong></TableCell>
                             <TableCell sx={{ color: '#fff' }}><strong>Location</strong></TableCell>
-                            <TableCell sx={{ color: '#fff' }}><strong>Short Code</strong></TableCell>
-                            <TableCell sx={{ color: '#fff' }} align="center"><strong>Status</strong></TableCell>
+                             <TableCell sx={{ color: '#fff' }}><strong>Short Code</strong></TableCell>
+                             <TableCell sx={{ color: '#fff' }}><strong>Link</strong></TableCell>
+                             <TableCell sx={{ color: '#fff' }} align="center"><strong>Status</strong></TableCell>
                             <TableCell sx={{ color: '#fff' }} align="center"><strong>Actions</strong></TableCell>
                         </TableRow>
                     </TableHead>
@@ -150,8 +151,21 @@ export default function AdminBusinessTable() {
                             <TableRow key={business._id} sx={{ '&:hover': { backgroundColor: '#1e1e1e' } }}>
                                 <TableCell sx={{ color: '#ddd' }}>{business.business_name}</TableCell>
                                 <TableCell sx={{ color: '#ddd' }}>{business.location}</TableCell>
-                                <TableCell sx={{ color: '#ddd' }}>{business.short_code}</TableCell>
-                                <TableCell align="center">
+                                 <TableCell sx={{ color: '#ddd' }}>{business.short_code}</TableCell>
+                                 <TableCell sx={{ color: '#ddd' }}>
+                                     {business.business_link ? (
+                                         <IconButton 
+                                             component="a" 
+                                             href={business.business_link} 
+                                             target="_blank" 
+                                             rel="noopener noreferrer"
+                                             sx={{ color: '#2196f3' }}
+                                         >
+                                             <LinkIcon />
+                                         </IconButton>
+                                     ) : '-'}
+                                 </TableCell>
+                                 <TableCell align="center">
                                     <Switch
                                         checked={business.is_active}
                                         onChange={() => handleStatusToggle(business._id, business.is_active)}

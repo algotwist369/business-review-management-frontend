@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import AddReviewModal from '../component/AddReviewModel'
 import BusinessReviewTable from '../component/BusinessReviewTable';
+import BusinessTable from '../component/BusinessTable';
 import UnAuthorizeHomePage from '../component/UnAuthorizeHomePage';
 
 const Home = ({ onLoginClick, user }) => {
@@ -17,6 +18,7 @@ const Home = ({ onLoginClick, user }) => {
                 <UnAuthorizeHomePage onLoginClick={onLoginClick} />
             ) : (
                 <>
+                    <BusinessTable />
                     <BusinessReviewTable
                         onEdit={handleEdit}
                         setShowModal={setShowModal}

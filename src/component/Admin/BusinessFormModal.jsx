@@ -15,6 +15,7 @@ export default function BusinessFormModal({ open, onClose, onSubmit, initialData
         business_name: '',
         location: '',
         short_code: '',
+        business_link: '',
     })
 
     useEffect(() => {
@@ -23,12 +24,14 @@ export default function BusinessFormModal({ open, onClose, onSubmit, initialData
                 business_name: initialData.business_name || '',
                 location: initialData.location || '',
                 short_code: initialData.short_code || '',
+                business_link: initialData.business_link || '',
             })
         } else {
             setFormData({
                 business_name: '',
                 location: '',
                 short_code: '',
+                business_link: '',
             })
         }
     }, [initialData, open])
@@ -101,6 +104,23 @@ export default function BusinessFormModal({ open, onClose, onSubmit, initialData
                             value={formData.short_code}
                             onChange={handleChange}
                             required
+                            fullWidth
+                            variant="outlined"
+                            sx={{
+                                input: { color: '#fff' },
+                                label: { color: '#aaa' },
+                                '& .MuiOutlinedInput-root': {
+                                    '& fieldset': { borderColor: '#444' },
+                                    '&:hover fieldset': { borderColor: '#666' },
+                                    '&.Mui-focused fieldset': { borderColor: '#fff' },
+                                },
+                            }}
+                        />
+                        <TextField
+                            label="Business Link"
+                            name="business_link"
+                            value={formData.business_link}
+                            onChange={handleChange}
                             fullWidth
                             variant="outlined"
                             sx={{
