@@ -17,9 +17,11 @@ import {
     Select,
     MenuItem,
     FormControl,
+    TableSortLabel,
 } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
 import LinkIcon from '@mui/icons-material/Link'
+import FilterListIcon from '@mui/icons-material/FilterList'
 import { useBusinesses } from '../hooks/useBusinesses'
 
 export default function BusinessTable() {
@@ -27,8 +29,10 @@ export default function BusinessTable() {
     const [rowsPerPage, setRowsPerPage] = useState(10)
     const [search, setSearch] = useState('')
     const [debouncedSearch, setDebouncedSearch] = useState('')
-    const [businessLinkFilter, setBusinessLinkFilter] = useState('')
-    const [statusFilter, setStatusFilter] = useState('all') // User role usually only sees active, but can still filter if we want to follow request literally
+    const [hasLinkFilter, setHasLinkFilter] = useState('all') // 'all', 'true', 'false'
+    const [statusFilter, setStatusFilter] = useState('all')
+    const [sortBy, setSortBy] = useState('createdAt')
+    const [sortOrder, setSortOrder] = useState('desc')
 
     // Debounce search effect
     useEffect(() => {
@@ -41,15 +45,23 @@ export default function BusinessTable() {
     // Reset pagination when filters change
     useEffect(() => {
         setPage(0)
-    }, [debouncedSearch, businessLinkFilter, statusFilter])
+    }, [debouncedSearch, hasLinkFilter, statusFilter, sortBy, sortOrder])
 
     const { data, isLoading, isFetching, isError, error } = useBusinesses({
         page: page + 1,
         limit: rowsPerPage,
         search: debouncedSearch,
-        business_link: businessLinkFilter,
+        has_link: hasLinkFilter === 'all' ? undefined : hasLinkFilter,
         is_active: statusFilter === 'all' ? undefined : statusFilter,
+        sortBy,
+        sortOrder,
     })
+
+    const handleSort = (property) => {
+        const isAsc = sortBy === property && sortOrder === 'asc'
+        setSortOrder(isAsc ? 'desc' : 'asc')
+        setSortBy(property)
+    }
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage)
@@ -95,32 +107,11 @@ export default function BusinessTable() {
                             ),
                         }}
                     />
-                    <TextField
-                        size="small"
-                        placeholder="Filter by Link..."
-                        value={businessLinkFilter}
-                        onChange={(e) => setBusinessLinkFilter(e.target.value)}
-                        sx={{
-                            minWidth: 150,
-                            input: { color: '#fff' },
-                            '& .MuiOutlinedInput-root': {
-                                '& fieldset': { borderColor: '#444' },
-                                '&:hover fieldset': { borderColor: '#666' },
-                                '&.Mui-focused fieldset': { borderColor: '#fff' },
-                            },
-                        }}
-                        InputProps={{
-                            startAdornment: (
-                                <InputAdornment position="start">
-                                    <LinkIcon sx={{ color: '#aaa' }} />
-                                </InputAdornment>
-                            ),
-                        }}
-                    />
-                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                    <FormControl size="small" sx={{ minWidth: 150 }}>
                         <Select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
+                            value={hasLinkFilter}
+                            onChange={(e) => setHasLinkFilter(e.target.value)}
+                            displayEmpty
                             sx={{
                                 color: '#fff',
                                 '.MuiOutlinedInput-notchedOutline': { borderColor: '#444' },
@@ -128,10 +119,38 @@ export default function BusinessTable() {
                                 '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#fff' },
                                 '.MuiSvgIcon-root': { color: '#aaa' }
                             }}
+                            startAdornment={
+                                <InputAdornment position="start">
+                                    <LinkIcon sx={{ color: '#aaa', fontSize: 20, mr: 1 }} />
+                                </InputAdornment>
+                            }
+                        >
+                            <MenuItem value="all">All Links</MenuItem>
+                            <MenuItem value="true">With Link</MenuItem>
+                            <MenuItem value="false">No Link</MenuItem>
+                        </Select>
+                    </FormControl>
+                    <FormControl size="small" sx={{ minWidth: 150 }}>
+                        <Select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            displayEmpty
+                            sx={{
+                                color: '#fff',
+                                '.MuiOutlinedInput-notchedOutline': { borderColor: '#444' },
+                                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#666' },
+                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#fff' },
+                                '.MuiSvgIcon-root': { color: '#aaa' }
+                            }}
+                            startAdornment={
+                                <InputAdornment position="start">
+                                    <FilterListIcon sx={{ color: '#aaa', fontSize: 20, mr: 1 }} />
+                                </InputAdornment>
+                            }
                         >
                             <MenuItem value="all">All Status</MenuItem>
-                            <MenuItem value="true">Active</MenuItem>
-                            <MenuItem value="false">Inactive</MenuItem>
+                            <MenuItem value="true">Active Only</MenuItem>
+                            <MenuItem value="false">Inactive Only</MenuItem>
                         </Select>
                     </FormControl>
                     {isFetching && <CircularProgress size={20} sx={{ color: '#fff' }} />}
@@ -142,9 +161,33 @@ export default function BusinessTable() {
                 <Table>
                     <TableHead>
                         <TableRow sx={{ backgroundColor: '#1e1e1e' }}>
-                            <TableCell sx={{ color: '#fff' }}><strong>Business Name</strong></TableCell>
+                            <TableCell sx={{ color: '#fff' }}>
+                                <TableSortLabel
+                                    active={sortBy === 'business_name'}
+                                    direction={sortBy === 'business_name' ? sortOrder : 'asc'}
+                                    onClick={() => handleSort('business_name')}
+                                    sx={{ 
+                                        color: '#fff !important',
+                                        '& .MuiTableSortLabel-icon': { color: '#fff !important' }
+                                    }}
+                                >
+                                    <strong>Business Name</strong>
+                                </TableSortLabel>
+                            </TableCell>
                             <TableCell sx={{ color: '#fff' }}><strong>Location</strong></TableCell>
-                            <TableCell sx={{ color: '#fff' }} align="center"><strong>Business Link</strong></TableCell>
+                            <TableCell sx={{ color: '#fff' }} align="center">
+                                <TableSortLabel
+                                    active={sortBy === 'business_link'}
+                                    direction={sortBy === 'business_link' ? sortOrder : 'asc'}
+                                    onClick={() => handleSort('business_link')}
+                                    sx={{ 
+                                        color: '#fff !important',
+                                        '& .MuiTableSortLabel-icon': { color: '#fff !important' }
+                                    }}
+                                >
+                                    <strong>Business Link</strong>
+                                </TableSortLabel>
+                            </TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
