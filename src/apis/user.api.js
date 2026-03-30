@@ -13,3 +13,6 @@ export const updateUserStatus = (id, is_active) =>
     apiClient.patch(`/users/${id}/status`, { is_active });
 
 export const deleteUser = (id) => apiClient.delete(`/users/${id}`);
+
+export const assignBusinessesToUser = (id, businessIds) =>
+    apiClient.post(`/users/${id}/assign-businesses`, { businessIds });

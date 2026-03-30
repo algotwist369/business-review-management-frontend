@@ -47,3 +47,13 @@ export const useGoogleAuth = () => {
         },
     });
 };
+
+export const useAssignBusinessesToUser = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, businessIds }) => userApi.assignBusinessesToUser(id, businessIds),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+        },
+    });
+};
