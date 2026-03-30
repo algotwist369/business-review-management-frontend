@@ -45,17 +45,21 @@ const BusinessAssignmentModal = ({ open, onClose, user }) => {
 
     useEffect(() => {
         if (open && user) {
-            // Initially select businesses that are already assigned to this user
-            setSelectedBusinesses(user.assigned_businesses || [])
+            // Ensure we work with strings for comparison
+            const assigned = (user.assigned_businesses || []).map(id => 
+                typeof id === 'object' ? id._id.toString() : id.toString()
+            )
+            setSelectedBusinesses(assigned)
         }
     }, [open, user])
 
     const handleToggle = (businessId) => {
-        const currentIndex = selectedBusinesses.indexOf(businessId)
+        const id = businessId.toString()
+        const currentIndex = selectedBusinesses.indexOf(id)
         const newSelected = [...selectedBusinesses]
 
         if (currentIndex === -1) {
-            newSelected.push(businessId)
+            newSelected.push(id)
         } else {
             newSelected.splice(currentIndex, 1)
         }
