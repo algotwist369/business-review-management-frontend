@@ -24,6 +24,8 @@ import {
     useGroupBusinesses,
     useRemoveBusinessFromGroup,
     useUserGroups,
+    useUpdateGroupName,
+    useDeleteGroup,
 } from '../hooks/useGroups'
 
 const BusinessGroupsPanel = ({ onAddReview }) => {
@@ -32,11 +34,15 @@ const BusinessGroupsPanel = ({ onAddReview }) => {
     const [showManageBusinesses, setShowManageBusinesses] = useState(false)
     const [selectedBusinessIds, setSelectedBusinessIds] = useState([])
     const [isSavingSelection, setIsSavingSelection] = useState(false)
+    const [isEditingGroupName, setIsEditingGroupName] = useState(false)
+    const [editingGroupName, setEditingGroupName] = useState('')
     const { data: groupsData, isLoading: groupsLoading, isError: groupsError } = useUserGroups()
     const { data: businessData, isLoading: businessesLoading } = useBusinesses({ limit: 1000 })
     const createGroupMutation = useCreateGroup()
     const addBusinessMutation = useAddBusinessToGroup()
     const removeBusinessMutation = useRemoveBusinessFromGroup()
+    const updateGroupNameMutation = useUpdateGroupName()
+    const deleteGroupMutation = useDeleteGroup()
 
     const groups = groupsData || []
     const businesses = businessData?.data || []
@@ -165,6 +171,7 @@ const BusinessGroupsPanel = ({ onAddReview }) => {
                         onChange={(e, nextIndex) => {
                             setActiveGroupIndex(nextIndex)
                             setShowManageBusinesses(false)
+                            setIsEditingGroupName(false)
                         }}
                         variant="scrollable"
                         scrollButtons="auto"
@@ -181,19 +188,83 @@ const BusinessGroupsPanel = ({ onAddReview }) => {
                     </Tabs>
 
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <Typography variant="subtitle1" sx={{ color: '#ddd', fontWeight: 600 }}>
-                            {activeGroup?.groupName || 'Selected Group'}
-                        </Typography>
-                        <ButtonComponent
-                            text={showManageBusinesses ? 'Close' : 'Add To Group'}
-                            onClick={() => {
-                                if (showManageBusinesses) {
-                                    setShowManageBusinesses(false)
-                                    return
-                                }
-                                handleOpenManageBusinesses()
-                            }}
-                        />
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                            {isEditingGroupName ? (
+                                <>
+                                    <TextField
+                                        size="small"
+                                        value={editingGroupName}
+                                        onChange={(e) => setEditingGroupName(e.target.value)}
+                                        sx={{
+                                            minWidth: 220,
+                                            input: { color: '#fff' },
+                                            '& .MuiOutlinedInput-root': {
+                                                '& fieldset': { borderColor: '#444' },
+                                                '&:hover fieldset': { borderColor: '#666' },
+                                                '&.Mui-focused fieldset': { borderColor: '#fff' },
+                                            },
+                                        }}
+                                    />
+                                    <ButtonComponent
+                                        text={updateGroupNameMutation.isPending ? 'Saving...' : 'Save Name'}
+                                        onClick={() => {
+                                            if (!activeGroupId || !editingGroupName.trim()) return
+                                            updateGroupNameMutation.mutate(
+                                                { groupId: activeGroupId, groupName: editingGroupName.trim() },
+                                                {
+                                                    onSuccess: () => setIsEditingGroupName(false),
+                                                    onError: (err) => alert(err.error || 'Failed to update group name'),
+                                                }
+                                            )
+                                        }}
+                                        disabled={updateGroupNameMutation.isPending}
+                                    />
+                                </>
+                            ) : (
+                                <Typography variant="subtitle1" sx={{ color: '#ddd', fontWeight: 600 }}>
+                                    {activeGroup?.groupName || 'Selected Group'}
+                                </Typography>
+                            )}
+                        </Box>
+
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <ButtonComponent
+                                text={isEditingGroupName ? 'Cancel' : 'Rename'}
+                                onClick={() => {
+                                    if (isEditingGroupName) {
+                                        setIsEditingGroupName(false)
+                                        return
+                                    }
+                                    setEditingGroupName(activeGroup?.groupName || '')
+                                    setIsEditingGroupName(true)
+                                }}
+                            />
+                            <ButtonComponent
+                                text={showManageBusinesses ? 'Close' : 'Add To Group'}
+                                onClick={() => {
+                                    if (showManageBusinesses) {
+                                        setShowManageBusinesses(false)
+                                        return
+                                    }
+                                    handleOpenManageBusinesses()
+                                }}
+                            />
+                            <ButtonComponent
+                                text={deleteGroupMutation.isPending ? 'Deleting...' : 'Delete Group'}
+                                onClick={() => {
+                                    if (!activeGroupId) return
+                                    if (!window.confirm('Are you sure you want to delete this group?')) return
+                                    deleteGroupMutation.mutate(activeGroupId, {
+                                        onSuccess: () => {
+                                            setActiveGroupIndex(0)
+                                            setShowManageBusinesses(false)
+                                        },
+                                        onError: (err) => alert(err.error || 'Failed to delete group'),
+                                    })
+                                }}
+                                disabled={deleteGroupMutation.isPending}
+                            />
+                        </Box>
                     </Box>
 
                     {showManageBusinesses && (
@@ -263,16 +334,29 @@ const BusinessGroupsPanel = ({ onAddReview }) => {
                                                         rel="noopener noreferrer"
                                                         style={{ color: '#64b5f6', display: 'inline-flex', alignItems: 'center', gap: 6 }}
                                                     >
-                                                        Open Link
                                                         <FaExternalLinkAlt size={12} />
                                                     </a>
                                                 ) : '-'}
                                             </TableCell>
                                             <TableCell align="center">
-                                                <ButtonComponent
-                                                    text="Add Review"
-                                                    onClick={() => onAddReview?.(business)}
-                                                />
+                                                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                                                    <ButtonComponent
+                                                        text="Add Review"
+                                                        onClick={() => onAddReview?.(business)}
+                                                    />
+                                                    <ButtonComponent
+                                                        text="Remove"
+                                                        onClick={() => {
+                                                            if (!activeGroupId) return
+                                                            removeBusinessMutation.mutate(
+                                                                { groupId: activeGroupId, businessId: business._id },
+                                                                {
+                                                                    onError: (err) => alert(err.error || 'Failed to remove business'),
+                                                                }
+                                                            )
+                                                        }}
+                                                    />
+                                                </Box>
                                             </TableCell>
                                         </TableRow>
                                     ))}

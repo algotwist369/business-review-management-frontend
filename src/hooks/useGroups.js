@@ -49,3 +49,25 @@ export const useRemoveBusinessFromGroup = () => {
         },
     })
 }
+
+export const useUpdateGroupName = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: ({ groupId, groupName }) => groupApi.updateGroupName(groupId, groupName),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['groups'] })
+            queryClient.invalidateQueries({ queryKey: ['groupBusinesses', variables.groupId] })
+        },
+    })
+}
+
+export const useDeleteGroup = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: groupApi.deleteGroup,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['groups'] })
+            queryClient.invalidateQueries({ queryKey: ['groupBusinesses'] })
+        },
+    })
+}
