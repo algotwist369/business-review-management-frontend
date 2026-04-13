@@ -15,7 +15,7 @@ import ButtonComponent from './ButtonComponent';
 import { useBusinesses } from '../hooks/useBusinesses'
 import { useAddReview, useEditReview } from '../hooks/useReviews'
 
-const AddReviewModal = ({ showModal, setShowModal, initialData = null }) => {
+const AddReviewModal = ({ showModal, setShowModal, initialData = null, preselectedBusiness = null }) => {
     const isEdit = !!initialData
     const [query, setQuery] = useState('')
     const [selectedBusiness, setSelectedBusiness] = useState(null)
@@ -35,12 +35,12 @@ const AddReviewModal = ({ showModal, setShowModal, initialData = null }) => {
             // Join array of links with comma for editing
             setReviewLink(initialData.review_link?.join(', ') || '')
         } else {
-            setSelectedBusiness(null)
+            setSelectedBusiness(preselectedBusiness || null)
             setSelectedDate(new Date().toISOString().split('T')[0])
             setReviewCount('')
             setReviewLink('')
         }
-    }, [initialData, showModal])
+    }, [initialData, showModal, preselectedBusiness])
 
     if (!showModal) return null
 

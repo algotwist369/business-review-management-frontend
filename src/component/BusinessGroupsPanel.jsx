@@ -5,12 +5,15 @@ import {
     Typography,
     TextField,
     CircularProgress,
-    Divider,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    Chip,
+    Tabs,
+    Tab,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Checkbox,
 } from '@mui/material'
 import ButtonComponent from './ButtonComponent'
 import { useBusinesses } from '../hooks/useBusinesses'
@@ -21,9 +24,12 @@ import {
     useUserGroups,
 } from '../hooks/useGroups'
 
-const BusinessGroupsPanel = () => {
+const BusinessGroupsPanel = ({ onAddReview }) => {
     const [groupName, setGroupName] = useState('')
-    const [selectedBusinessByGroup, setSelectedBusinessByGroup] = useState({})
+    const [activeGroupIndex, setActiveGroupIndex] = useState(0)
+    const [showManageBusinesses, setShowManageBusinesses] = useState(false)
+    const [selectedBusinessIds, setSelectedBusinessIds] = useState([])
+    const [isSavingSelection, setIsSavingSelection] = useState(false)
     const { data: groupsData, isLoading: groupsLoading, isError: groupsError } = useUserGroups()
     const { data: businessData, isLoading: businessesLoading } = useBusinesses({ limit: 1000 })
     const createGroupMutation = useCreateGroup()
@@ -32,6 +38,7 @@ const BusinessGroupsPanel = () => {
 
     const groups = groupsData || []
     const businesses = businessData?.data || []
+    const activeGroup = groups[activeGroupIndex] || null
 
     const handleCreateGroup = () => {
         if (!groupName.trim()) {
@@ -48,21 +55,48 @@ const BusinessGroupsPanel = () => {
         )
     }
 
-    const handleAddBusiness = (groupId) => {
-        const selectedBusinessId = selectedBusinessByGroup[groupId]
-        if (!selectedBusinessId) return
+    const handleOpenManageBusinesses = () => {
+        if (!activeGroup) return
+        setSelectedBusinessIds((activeGroup.businessIds || []).map((business) => business._id))
+        setShowManageBusinesses(true)
+    }
 
-        addBusinessMutation.mutate(
-            { groupId, businessId: selectedBusinessId },
-            {
-                onError: (err) => alert(err.error || 'Failed to add business to group'),
-            }
+    const handleToggleBusiness = (businessId) => {
+        setSelectedBusinessIds((prev) =>
+            prev.includes(businessId) ? prev.filter((id) => id !== businessId) : [...prev, businessId]
         )
     }
 
-    const getSelectableBusinesses = (group) => {
-        const existingIds = new Set((group.businessIds || []).map((b) => b._id))
-        return businesses.filter((business) => !existingIds.has(business._id))
+    const handleToggleSelectAll = () => {
+        if (selectedBusinessIds.length === businesses.length) {
+            setSelectedBusinessIds([])
+            return
+        }
+        setSelectedBusinessIds(businesses.map((business) => business._id))
+    }
+
+    const handleSaveBusinessSelection = async () => {
+        if (!activeGroup) return
+
+        try {
+            setIsSavingSelection(true)
+            const selectedSet = new Set(selectedBusinessIds)
+            const currentSet = new Set((activeGroup.businessIds || []).map((business) => business._id))
+
+            const toAdd = selectedBusinessIds.filter((id) => !currentSet.has(id))
+            const toRemove = [...currentSet].filter((id) => !selectedSet.has(id))
+
+            await Promise.all([
+                ...toAdd.map((businessId) => addBusinessMutation.mutateAsync({ groupId: activeGroup._id, businessId })),
+                ...toRemove.map((businessId) => removeBusinessMutation.mutateAsync({ groupId: activeGroup._id, businessId })),
+            ])
+
+            setShowManageBusinesses(false)
+        } catch (err) {
+            alert(err.error || 'Failed to update group businesses')
+        } finally {
+            setIsSavingSelection(false)
+        }
     }
 
     return (
@@ -115,83 +149,125 @@ const BusinessGroupsPanel = () => {
                 </Typography>
             )}
 
-            {groups.map((group) => {
-                const selectableBusinesses = getSelectableBusinesses(group)
-                const selectedBusinessId = selectedBusinessByGroup[group._id] || ''
+            {groups.length > 0 && (
+                <>
+                    <Tabs
+                        value={activeGroupIndex}
+                        onChange={(e, nextIndex) => {
+                            setActiveGroupIndex(nextIndex)
+                            setShowManageBusinesses(false)
+                        }}
+                        variant="scrollable"
+                        scrollButtons="auto"
+                        sx={{
+                            mb: 2,
+                            '& .MuiTab-root': { color: '#aaa', textTransform: 'none', fontWeight: 600 },
+                            '& .Mui-selected': { color: '#fff !important' },
+                            '& .MuiTabs-indicator': { backgroundColor: '#fff' },
+                        }}
+                    >
+                        {groups.map((group) => (
+                            <Tab key={group._id} label={group.groupName} />
+                        ))}
+                    </Tabs>
 
-                return (
-                    <Box key={group._id} sx={{ mb: 3 }}>
-                        <Divider sx={{ borderColor: '#2a2a2a', mb: 2 }} />
-                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                            {group.groupName}
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Typography variant="subtitle1" sx={{ color: '#ddd', fontWeight: 600 }}>
+                            {activeGroup?.groupName || 'Selected Group'}
                         </Typography>
-
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mt: 1, mb: 2 }}>
-                            {(group.businessIds || []).length === 0 ? (
-                                <Typography sx={{ color: '#aaa' }}>
-                                    No businesses in this group.
-                                </Typography>
-                            ) : (
-                                group.businessIds.map((business) => (
-                                    <Chip
-                                        key={business._id}
-                                        label={business.business_name}
-                                        onDelete={() =>
-                                            removeBusinessMutation.mutate(
-                                                { groupId: group._id, businessId: business._id },
-                                                {
-                                                    onError: (err) => alert(err.error || 'Failed to remove business'),
-                                                }
-                                            )
-                                        }
-                                        sx={{
-                                            backgroundColor: '#1f1f1f',
-                                            color: '#fff',
-                                            '& .MuiChip-deleteIcon': { color: '#aaa' },
-                                            '& .MuiChip-deleteIcon:hover': { color: '#f44336' },
-                                        }}
-                                    />
-                                ))
-                            )}
-                        </Box>
-
-                        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-                            <FormControl size="small" sx={{ minWidth: 240 }}>
-                                <InputLabel sx={{ color: '#aaa' }}>Add Business</InputLabel>
-                                <Select
-                                    label="Add Business"
-                                    value={selectedBusinessId}
-                                    onChange={(e) =>
-                                        setSelectedBusinessByGroup((prev) => ({
-                                            ...prev,
-                                            [group._id]: e.target.value,
-                                        }))
-                                    }
-                                    sx={{
-                                        color: '#fff',
-                                        '.MuiOutlinedInput-notchedOutline': { borderColor: '#444' },
-                                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#666' },
-                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#fff' },
-                                        '.MuiSvgIcon-root': { color: '#aaa' },
-                                    }}
-                                >
-                                    {selectableBusinesses.map((business) => (
-                                        <MenuItem key={business._id} value={business._id}>
-                                            {business.business_name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-
-                            <ButtonComponent
-                                text={addBusinessMutation.isPending ? 'Adding...' : 'Add To Group'}
-                                onClick={() => handleAddBusiness(group._id)}
-                                disabled={!selectedBusinessId || addBusinessMutation.isPending}
-                            />
-                        </Box>
+                        <ButtonComponent
+                            text={showManageBusinesses ? 'Close' : 'Add To Group'}
+                            onClick={() => {
+                                if (showManageBusinesses) {
+                                    setShowManageBusinesses(false)
+                                    return
+                                }
+                                handleOpenManageBusinesses()
+                            }}
+                        />
                     </Box>
-                )
-            })}
+
+                    {showManageBusinesses && (
+                        <Paper sx={{ p: 2, backgroundColor: '#181818', border: '1px solid #333', mb: 2 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                                <Typography sx={{ color: '#ddd', fontWeight: 600 }}>Select Assigned Businesses</Typography>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                        <Checkbox
+                                            checked={businesses.length > 0 && selectedBusinessIds.length === businesses.length}
+                                            indeterminate={selectedBusinessIds.length > 0 && selectedBusinessIds.length < businesses.length}
+                                            onChange={handleToggleSelectAll}
+                                            sx={{ color: '#aaa', '&.Mui-checked': { color: '#fff' } }}
+                                        />
+                                        <Typography sx={{ color: '#aaa' }}>Select All</Typography>
+                                    </Box>
+                                    <ButtonComponent
+                                        text={isSavingSelection ? 'Saving...' : 'Save Selection'}
+                                        onClick={handleSaveBusinessSelection}
+                                        disabled={isSavingSelection}
+                                    />
+                                </Box>
+                            </Box>
+
+                            {businesses.map((business) => (
+                                <Box key={business._id} sx={{ display: 'flex', alignItems: 'center', py: 0.5 }}>
+                                    <Checkbox
+                                        checked={selectedBusinessIds.includes(business._id)}
+                                        onChange={() => handleToggleBusiness(business._id)}
+                                        sx={{ color: '#aaa', '&.Mui-checked': { color: '#fff' } }}
+                                    />
+                                    <Typography sx={{ color: '#ddd' }}>{business.business_name}</Typography>
+                                </Box>
+                            ))}
+                        </Paper>
+                    )}
+
+                    {!activeGroup || (activeGroup.businessIds || []).length === 0 ? (
+                        <Typography sx={{ color: '#aaa' }}>
+                            No businesses in this group.
+                        </Typography>
+                    ) : (
+                        <TableContainer>
+                            <Table>
+                                <TableHead>
+                                    <TableRow sx={{ backgroundColor: '#1e1e1e' }}>
+                                        <TableCell sx={{ color: '#fff' }}><strong>Business Name</strong></TableCell>
+                                        <TableCell sx={{ color: '#fff' }}><strong>Location</strong></TableCell>
+                                        <TableCell sx={{ color: '#fff' }}><strong>Business Link</strong></TableCell>
+                                        <TableCell sx={{ color: '#fff' }} align="center"><strong>Action</strong></TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {activeGroup.businessIds.map((business) => (
+                                        <TableRow key={business._id} sx={{ '&:hover': { backgroundColor: '#1e1e1e' } }}>
+                                            <TableCell sx={{ color: '#ddd' }}>{business.business_name}</TableCell>
+                                            <TableCell sx={{ color: '#ddd' }}>{business.location || '-'}</TableCell>
+                                            <TableCell sx={{ color: '#ddd' }}>
+                                                {business.business_link ? (
+                                                    <a
+                                                        href={business.business_link}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        style={{ color: '#64b5f6' }}
+                                                    >
+                                                        Open Link
+                                                    </a>
+                                                ) : '-'}
+                                            </TableCell>
+                                            <TableCell align="center">
+                                                <ButtonComponent
+                                                    text="Add Review"
+                                                    onClick={() => onAddReview?.(business)}
+                                                />
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    )}
+                </>
+            )}
         </Paper>
     )
 }

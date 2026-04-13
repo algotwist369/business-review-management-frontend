@@ -8,9 +8,17 @@ import UnAuthorizeHomePage from '../component/UnAuthorizeHomePage';
 const Home = ({ onLoginClick, user }) => {
     const [showModal, setShowModal] = useState(false);
     const [editingReview, setEditingReview] = useState(null);
+    const [preselectedBusiness, setPreselectedBusiness] = useState(null);
 
     const handleEdit = (review) => {
+        setPreselectedBusiness(null)
         setEditingReview(review)
+    }
+
+    const handleGroupAddReview = (business) => {
+        setEditingReview(null)
+        setPreselectedBusiness(business)
+        setShowModal(true)
     }
 
     return (
@@ -20,7 +28,7 @@ const Home = ({ onLoginClick, user }) => {
             ) : (
                 <>
                     <BusinessTable />
-                    {user?.role === 'user' && <BusinessGroupsPanel />}
+                    {user?.role === 'user' && <BusinessGroupsPanel onAddReview={handleGroupAddReview} />}
                     <BusinessReviewTable
                         onEdit={handleEdit}
                         setShowModal={setShowModal}
@@ -32,6 +40,7 @@ const Home = ({ onLoginClick, user }) => {
                         showModal={showModal}
                         setShowModal={setShowModal}
                         initialData={editingReview}
+                        preselectedBusiness={preselectedBusiness}
                     />
                 </>
             )}
