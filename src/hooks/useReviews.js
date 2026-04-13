@@ -17,6 +17,15 @@ export const useReviewStats = () => {
     });
 };
 
+export const useReviewsForBusiness = (businessId, params) => {
+    return useQuery({
+        queryKey: ['reviews', 'business', businessId, params],
+        queryFn: () => reviewApi.getReviewsForBusiness(businessId, params),
+        enabled: !!businessId,
+        keepPreviousData: true,
+    });
+};
+
 export const useAddReview = () => {
     const queryClient = useQueryClient();
     return useMutation({

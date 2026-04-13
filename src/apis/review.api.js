@@ -13,3 +13,5 @@ export const getReviewStats = () => apiClient.get('/reviews/stats/all');
 
 export const markAsPaid = (id) => apiClient.post(`/reviews/mark-as-paid/${id}`);
 export const markAsPaidCustomDate = (data) => apiClient.post('/reviews/mark-as-paid-custom-date', data);
+export const getReviewsForBusiness = (businessId, { page = 1, limit = 20 } = {}) =>
+    apiClient.get(`/reviews/business/${businessId}`, { params: { page, limit } });
