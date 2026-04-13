@@ -4,7 +4,6 @@ import {
     Box,
     Typography,
     TextField,
-    Button,
     CircularProgress,
     Divider,
     FormControl,
@@ -13,6 +12,7 @@ import {
     MenuItem,
     Chip,
 } from '@mui/material'
+import ButtonComponent from './ButtonComponent'
 import { useBusinesses } from '../hooks/useBusinesses'
 import {
     useAddBusinessToGroup,
@@ -67,9 +67,11 @@ const BusinessGroupsPanel = () => {
 
     return (
         <Paper sx={{ p: 3, backgroundColor: '#121212', color: '#fff', borderRadius: 3, mb: 4 }}>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                Business Groups
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    Business Groups
+                </Typography>
+            </Box>
 
             <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 3 }}>
                 <TextField
@@ -88,13 +90,11 @@ const BusinessGroupsPanel = () => {
                         },
                     }}
                 />
-                <Button
-                    variant="contained"
+                <ButtonComponent
+                    text={createGroupMutation.isPending ? 'Creating...' : 'Create Group'}
                     onClick={handleCreateGroup}
                     disabled={createGroupMutation.isPending}
-                >
-                    {createGroupMutation.isPending ? 'Creating...' : 'Create Group'}
-                </Button>
+                />
             </Box>
 
             {(groupsLoading || businessesLoading) && (
@@ -144,7 +144,12 @@ const BusinessGroupsPanel = () => {
                                                 }
                                             )
                                         }
-                                        sx={{ backgroundColor: '#1f1f1f', color: '#fff' }}
+                                        sx={{
+                                            backgroundColor: '#1f1f1f',
+                                            color: '#fff',
+                                            '& .MuiChip-deleteIcon': { color: '#aaa' },
+                                            '& .MuiChip-deleteIcon:hover': { color: '#f44336' },
+                                        }}
                                     />
                                 ))
                             )}
@@ -178,14 +183,11 @@ const BusinessGroupsPanel = () => {
                                 </Select>
                             </FormControl>
 
-                            <Button
-                                variant="outlined"
+                            <ButtonComponent
+                                text={addBusinessMutation.isPending ? 'Adding...' : 'Add To Group'}
                                 onClick={() => handleAddBusiness(group._id)}
                                 disabled={!selectedBusinessId || addBusinessMutation.isPending}
-                                sx={{ color: '#fff', borderColor: '#555' }}
-                            >
-                                Add To Group
-                            </Button>
+                            />
                         </Box>
                     </Box>
                 )
