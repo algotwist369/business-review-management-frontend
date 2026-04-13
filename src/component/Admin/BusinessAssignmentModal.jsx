@@ -3,6 +3,8 @@ import {
     Modal,
     Box,
     Typography,
+    Tabs,
+    Tab,
     List,
     ListItem,
     ListItemText,
@@ -36,9 +38,14 @@ const modalStyle = {
 const BusinessAssignmentModal = ({ open, onClose, user }) => {
     const [search, setSearch] = useState('')
     const [selectedBusinesses, setSelectedBusinesses] = useState([])
+    const [activeTab, setActiveTab] = useState('all')
 
-    // Fetch all businesses
-    const { data: businessesData, isLoading } = useBusinesses({ page: 1, limit: 100 })
+    // Fetch all businesses and search globally from backend
+    const { data: businessesData, isLoading } = useBusinesses({
+        page: 1,
+        limit: 10000,
+        search: search.trim(),
+    })
     const assignMutation = useAssignBusinessesToUser()
 
     const businesses = businessesData?.data || []
@@ -50,6 +57,7 @@ const BusinessAssignmentModal = ({ open, onClose, user }) => {
                 typeof id === 'object' ? id._id.toString() : id.toString()
             )
             setSelectedBusinesses(assigned)
+            setActiveTab('all')
         }
     }, [open, user])
 
@@ -78,11 +86,11 @@ const BusinessAssignmentModal = ({ open, onClose, user }) => {
         }
     }
 
-    const filteredBusinesses = businesses.filter(b =>
-        (b.business_name || '').toLowerCase().includes(search.toLowerCase()) ||
-        (b.location || '').toLowerCase().includes(search.toLowerCase()) ||
-        (b.short_code || '').toLowerCase().includes(search.toLowerCase())
+    const filteredBusinesses = businesses
+    const assignedBusinessesOnly = businesses.filter((business) =>
+        selectedBusinesses.includes(business._id?.toString())
     )
+    const displayedBusinesses = activeTab === 'assigned' ? assignedBusinessesOnly : filteredBusinesses
 
     return (
         <Modal open={open} onClose={onClose}>
@@ -115,6 +123,21 @@ const BusinessAssignmentModal = ({ open, onClose, user }) => {
                     }}
                 />
 
+                <Tabs
+                    value={activeTab}
+                    onChange={(_, newValue) => setActiveTab(newValue)}
+                    sx={{
+                        mb: 1,
+                        minHeight: 36,
+                        '& .MuiTab-root': { color: '#aaa', minHeight: 36, py: 0.5 },
+                        '& .Mui-selected': { color: '#fff !important' },
+                        '& .MuiTabs-indicator': { backgroundColor: '#fff' },
+                    }}
+                >
+                    <Tab value="all" label={`All Businesses (${filteredBusinesses.length})`} />
+                    <Tab value="assigned" label={`Assigned Businesses (${assignedBusinessesOnly.length})`} />
+                </Tabs>
+
                 <Box sx={{ flex: 1, overflowY: 'auto', mb: 2, minHeight: 200 }}>
                     {isLoading ? (
                         <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
@@ -122,19 +145,32 @@ const BusinessAssignmentModal = ({ open, onClose, user }) => {
                         </Box>
                     ) : (
                         <List>
-                            {filteredBusinesses.map((business) => (
+                            {displayedBusinesses.map((business) => (
                                 <ListItem key={business._id} button onClick={() => handleToggle(business._id)}>
                                     <Checkbox
-                                        checked={selectedBusinesses.indexOf(business._id) !== -1}
+                                        checked={selectedBusinesses.includes(business._id?.toString())}
                                         sx={{ color: '#aaa', '&.Mui-checked': { color: '#fff' } }}
                                     />
                                     <ListItemText
                                         primary={business.business_name}
                                         secondary={`${business.location} (${business.short_code})`}
-                                        secondaryTypographyProps={{ sx: { color: '#aaa', fontSize: '0.8rem' } }}
+                                        slotProps={{
+                                            secondary: { sx: { color: '#aaa', fontSize: '0.8rem' } },
+                                        }}
                                     />
                                 </ListItem>
                             ))}
+                            {!displayedBusinesses.length && (
+                                <ListItem>
+                                    <ListItemText
+                                        primary={activeTab === 'assigned' ? 'No assigned businesses found' : 'No businesses found'}
+                                        secondary={activeTab === 'assigned' ? 'Assign businesses from the All Businesses tab.' : 'Try a different search term.'}
+                                        slotProps={{
+                                            secondary: { sx: { color: '#aaa', fontSize: '0.8rem' } },
+                                        }}
+                                    />
+                                </ListItem>
+                            )}
                         </List>
                     )}
                 </Box>
