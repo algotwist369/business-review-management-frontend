@@ -19,12 +19,22 @@ export const useCreateGroup = () => {
     })
 }
 
+export const useGroupBusinesses = (groupId) => {
+    return useQuery({
+        queryKey: ['groupBusinesses', groupId],
+        queryFn: () => groupApi.getBusinessesInGroup(groupId),
+        enabled: !!groupId,
+        staleTime: 30000,
+    })
+}
+
 export const useAddBusinessToGroup = () => {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: ({ groupId, businessId }) => groupApi.addBusinessToGroup(groupId, businessId),
-        onSuccess: () => {
+        onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ['groups'] })
+            queryClient.invalidateQueries({ queryKey: ['groupBusinesses', variables.groupId] })
         },
     })
 }
@@ -33,8 +43,9 @@ export const useRemoveBusinessFromGroup = () => {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: ({ groupId, businessId }) => groupApi.removeBusinessFromGroup(groupId, businessId),
-        onSuccess: () => {
+        onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ['groups'] })
+            queryClient.invalidateQueries({ queryKey: ['groupBusinesses', variables.groupId] })
         },
     })
 }

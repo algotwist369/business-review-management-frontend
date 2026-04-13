@@ -15,11 +15,13 @@ import {
     TableRow,
     Checkbox,
 } from '@mui/material'
+import { FaExternalLinkAlt, FaLayerGroup } from 'react-icons/fa'
 import ButtonComponent from './ButtonComponent'
 import { useBusinesses } from '../hooks/useBusinesses'
 import {
     useAddBusinessToGroup,
     useCreateGroup,
+    useGroupBusinesses,
     useRemoveBusinessFromGroup,
     useUserGroups,
 } from '../hooks/useGroups'
@@ -39,6 +41,12 @@ const BusinessGroupsPanel = ({ onAddReview }) => {
     const groups = groupsData || []
     const businesses = businessData?.data || []
     const activeGroup = groups[activeGroupIndex] || null
+    const activeGroupId = activeGroup?._id
+    const {
+        data: activeGroupBusinessesData,
+        isLoading: activeGroupBusinessesLoading,
+    } = useGroupBusinesses(activeGroupId)
+    const groupBusinesses = activeGroupBusinessesData?.businesses || []
 
     const handleCreateGroup = () => {
         if (!groupName.trim()) {
@@ -56,8 +64,8 @@ const BusinessGroupsPanel = ({ onAddReview }) => {
     }
 
     const handleOpenManageBusinesses = () => {
-        if (!activeGroup) return
-        setSelectedBusinessIds((activeGroup.businessIds || []).map((business) => business._id))
+        if (!activeGroupId) return
+        setSelectedBusinessIds(groupBusinesses.map((business) => business._id))
         setShowManageBusinesses(true)
     }
 
@@ -76,19 +84,19 @@ const BusinessGroupsPanel = ({ onAddReview }) => {
     }
 
     const handleSaveBusinessSelection = async () => {
-        if (!activeGroup) return
+        if (!activeGroupId) return
 
         try {
             setIsSavingSelection(true)
             const selectedSet = new Set(selectedBusinessIds)
-            const currentSet = new Set((activeGroup.businessIds || []).map((business) => business._id))
+            const currentSet = new Set(groupBusinesses.map((business) => business._id))
 
             const toAdd = selectedBusinessIds.filter((id) => !currentSet.has(id))
             const toRemove = [...currentSet].filter((id) => !selectedSet.has(id))
 
             await Promise.all([
-                ...toAdd.map((businessId) => addBusinessMutation.mutateAsync({ groupId: activeGroup._id, businessId })),
-                ...toRemove.map((businessId) => removeBusinessMutation.mutateAsync({ groupId: activeGroup._id, businessId })),
+                ...toAdd.map((businessId) => addBusinessMutation.mutateAsync({ groupId: activeGroupId, businessId })),
+                ...toRemove.map((businessId) => removeBusinessMutation.mutateAsync({ groupId: activeGroupId, businessId })),
             ])
 
             setShowManageBusinesses(false)
@@ -103,6 +111,7 @@ const BusinessGroupsPanel = ({ onAddReview }) => {
         <Paper sx={{ p: 3, backgroundColor: '#121212', color: '#fff', borderRadius: 3, mb: 4 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    <FaLayerGroup style={{ display: 'inline', marginRight: 8 }} />
                     Business Groups
                 </Typography>
             </Box>
@@ -222,7 +231,11 @@ const BusinessGroupsPanel = ({ onAddReview }) => {
                         </Paper>
                     )}
 
-                    {!activeGroup || (activeGroup.businessIds || []).length === 0 ? (
+                    {activeGroupBusinessesLoading ? (
+                        <Box sx={{ py: 2, display: 'flex', justifyContent: 'center' }}>
+                            <CircularProgress size={22} />
+                        </Box>
+                    ) : !activeGroup || groupBusinesses.length === 0 ? (
                         <Typography sx={{ color: '#aaa' }}>
                             No businesses in this group.
                         </Typography>
@@ -238,7 +251,7 @@ const BusinessGroupsPanel = ({ onAddReview }) => {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {activeGroup.businessIds.map((business) => (
+                                    {groupBusinesses.map((business) => (
                                         <TableRow key={business._id} sx={{ '&:hover': { backgroundColor: '#1e1e1e' } }}>
                                             <TableCell sx={{ color: '#ddd' }}>{business.business_name}</TableCell>
                                             <TableCell sx={{ color: '#ddd' }}>{business.location || '-'}</TableCell>
@@ -248,9 +261,10 @@ const BusinessGroupsPanel = ({ onAddReview }) => {
                                                         href={business.business_link}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        style={{ color: '#64b5f6' }}
+                                                        style={{ color: '#64b5f6', display: 'inline-flex', alignItems: 'center', gap: 6 }}
                                                     >
                                                         Open Link
+                                                        <FaExternalLinkAlt size={12} />
                                                     </a>
                                                 ) : '-'}
                                             </TableCell>
