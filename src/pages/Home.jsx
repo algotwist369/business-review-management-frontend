@@ -22,7 +22,7 @@ const Home = ({ onLoginClick, user }) => {
     }
 
     return (
-        <div className='max-w-7xl mx-auto my-8'>
+        <div className='max-w-7xl mx-auto my-4 px-3 sm:my-8 sm:px-4'>
             {!user ? (
                 <UnAuthorizeHomePage onLoginClick={onLoginClick} />
             ) : (

@@ -25,6 +25,7 @@ import BusinessIcon from '@mui/icons-material/Business'
 import { Select, MenuItem } from '@mui/material'
 import { useUsers, useUpdateUserStatus, useDeleteUser } from '../../hooks/useUsers'
 import { useUpdateUserRole } from '../../hooks/useSuperAdmin'
+import { useUpdateAiReviewPermission } from '../../hooks/useAiReviews'
 import UserAssignmentModal from './UserAssignmentModal'
 import BusinessAssignmentModal from './BusinessAssignmentModal'
 
@@ -49,6 +50,7 @@ const AdminUsersTable = ({ onViewReviews, user: currentUser }) => {
     const updateStatusMutation = useUpdateUserStatus()
     const deleteUserMutation = useDeleteUser()
     const updateRoleMutation = useUpdateUserRole()
+    const updateAiPermissionMutation = useUpdateAiReviewPermission()
 
     const rows = data?.data || []
     const totalCount = data?.total || 0
@@ -66,6 +68,10 @@ const AdminUsersTable = ({ onViewReviews, user: currentUser }) => {
     const handleRoleChange = (id, newRole) => {
         updateRoleMutation.mutate({ id, role: newRole })
     }
+
+    const canManageAiPermission = (row) =>
+        (isSuperAdmin && ['admin', 'user'].includes(row.role)) ||
+        (isAdmin && row.role === 'user')
 
     const handleOpenAssignment = (admin) => {
         setSelectedAdmin(admin)
@@ -134,7 +140,7 @@ const AdminUsersTable = ({ onViewReviews, user: currentUser }) => {
     return (
         <Paper
             sx={{
-                p: 3,
+                p: { xs: 2, sm: 3 },
                 backgroundColor: '#121212',
                 color: '#fff',
                 borderRadius: 3,
@@ -148,6 +154,7 @@ const AdminUsersTable = ({ onViewReviews, user: currentUser }) => {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     sx={{
+                        width: { xs: '100%', sm: 'auto' },
                         input: { color: '#fff' },
                         '& .MuiOutlinedInput-root': {
                             '& fieldset': { borderColor: '#444' },
@@ -166,7 +173,7 @@ const AdminUsersTable = ({ onViewReviews, user: currentUser }) => {
             </Box>
 
             {/* 📋 Table */}
-            <TableContainer>
+            <TableContainer sx={{ overflowX: 'auto' }}>
                 <Table>
                     <TableHead>
                         <TableRow sx={{ backgroundColor: '#1e1e1e' }}>
@@ -192,6 +199,9 @@ const AdminUsersTable = ({ onViewReviews, user: currentUser }) => {
                             </TableCell>
                             <TableCell sx={{ color: '#fff' }} align="center">
                                 <strong>Status</strong>
+                            </TableCell>
+                            <TableCell sx={{ color: '#fff' }} align="center">
+                                <strong>AI Reviews</strong>
                             </TableCell>
                             <TableCell sx={{ color: '#fff' }} align="center">
                                 <strong>Action</strong>
@@ -297,6 +307,18 @@ const AdminUsersTable = ({ onViewReviews, user: currentUser }) => {
                                             },
                                         }}
                                     />
+                                </TableCell>
+
+                                <TableCell align="center">
+                                    {canManageAiPermission(row) ? (
+                                        <Switch
+                                            checked={!!row.ai_review_access}
+                                            onChange={() => updateAiPermissionMutation.mutate({
+                                                userId: row._id,
+                                                enabled: !row.ai_review_access,
+                                            })}
+                                        />
+                                    ) : '-'}
                                 </TableCell>
 
                                 <TableCell align="center">

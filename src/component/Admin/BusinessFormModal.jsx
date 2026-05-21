@@ -54,7 +54,8 @@ export default function BusinessFormModal({ open, onClose, onSubmit, initialData
                     backgroundColor: '#121212',
                     color: '#fff',
                     borderRadius: 3,
-                    minWidth: 400
+                    width: { xs: 'calc(100vw - 24px)', sm: 440 },
+                    maxWidth: '100%'
                 }
             }}
         >
@@ -135,7 +136,7 @@ export default function BusinessFormModal({ open, onClose, onSubmit, initialData
                         />
                     </Box>
                 </DialogContent>
-                <DialogActions sx={{ p: 3 }}>
+                <DialogActions sx={{ p: { xs: 2, sm: 3 }, flexWrap: 'wrap' }}>
                     <Button onClick={onClose} sx={{ color: '#aaa' }}>Cancel</Button>
                     <Button
                         type="submit"

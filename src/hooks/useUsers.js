@@ -48,6 +48,24 @@ export const useGoogleAuth = () => {
     });
 };
 
+export const useSignup = () => {
+    return useMutation({
+        mutationFn: userApi.signup,
+    });
+};
+
+export const useEmailLogin = () => {
+    return useMutation({
+        mutationFn: userApi.login,
+    });
+};
+
+export const useUpdatePassword = () => {
+    return useMutation({
+        mutationFn: userApi.updatePassword,
+    });
+};
+
 export const useAssignBusinessesToUser = () => {
     const queryClient = useQueryClient();
     return useMutation({

@@ -1,7 +1,11 @@
 import apiClient from './apiClient';
 
 export const googleAuth = (data) => apiClient.post('/users/google-auth', data);
+export const signup = (data) => apiClient.post('/users/signup', data);
+export const login = (data) => apiClient.post('/users/login', data);
 export const logout = () => apiClient.post('/users/logout');
+export const getCurrentUser = () => apiClient.get('/users/me');
+export const updatePassword = (data) => apiClient.patch('/users/password', data);
 
 // Admin only
 export const getAllUsers = ({ page = 1, limit = 20 }) =>

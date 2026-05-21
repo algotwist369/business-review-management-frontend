@@ -5,6 +5,10 @@ import AdminBusinessTable from '../component/Admin/AdminBusinessTable'
 import BusinessReviewTable from '../component/BusinessReviewTable'
 import AddReviewModal from '../component/AddReviewModel'
 import ButtonComponent from '../component/ButtonComponent'
+import AiDatasetManager from '../component/Admin/AiDatasetManager'
+import AiLanguageManager from '../component/Admin/AiLanguageManager'
+import AiAnalyticsDashboard from '../component/Admin/AiAnalyticsDashboard'
+import AiPromptOptionsManager from '../component/Admin/AiPromptOptionsManager'
 
 const Admin = ({ user }) => {
   const [activeTab, setActiveTab] = useState(0)
@@ -30,21 +34,29 @@ const Admin = ({ user }) => {
   }
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4, color: '#fff' }}>
+    <Container maxWidth="xl" sx={{ px: { xs: 1.5, sm: 3 }, py: { xs: 2.5, sm: 4 }, color: '#fff' }}>
       <Box sx={{ borderBottom: 1, borderColor: '#333', mb: 3 }}>
         <Tabs
           value={activeTab}
           onChange={handleTabChange}
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
           textColor="inherit"
           indicatorColor="primary"
           sx={{
             '& .MuiTabs-indicator': { backgroundColor: '#fff' },
-            '& .MuiTab-root': { fontWeight: 600, fontSize: '0.9rem' }
+            '& .MuiTab-root': { fontWeight: 600, fontSize: '0.9rem', minWidth: { xs: 'auto', sm: 90 }, px: { xs: 1.5, sm: 2 } },
+            '& .MuiTabs-scrollButtons': { color: '#fff' }
           }}
         >
           <Tab label="Users" />
           <Tab label="Businesses" />
           <Tab label="User Reviews" />
+          <Tab label="AI Datasets" />
+          <Tab label="AI Languages" />
+          <Tab label="AI Services & Keywords" />
+          {user?.role === 'super_admin' && <Tab label="AI Analytics" />}
         </Tabs>
       </Box>
 
@@ -63,7 +75,7 @@ const Admin = ({ user }) => {
         )}
         {activeTab === 2 && (
           <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: 1, mb: 2 }}>
               <Typography variant="h6">
                 {selectedUserForReview ? `Reviews for: ${selectedUserForReview.username || selectedUserForReview.email}` : 'My Reviews'}
               </Typography>
@@ -84,6 +96,36 @@ const Admin = ({ user }) => {
               userId={selectedUserForReview?._id || user?._id || user?.id}
               isAdmin={true}
             />
+          </Box>
+        )}
+        {activeTab === 3 && (
+          <Box>
+            <Typography variant="h6" sx={{ mb: 2 }}>AI Review Dataset Management</Typography>
+            <AiDatasetManager />
+          </Box>
+        )}
+        {activeTab === 4 && (
+          <Box>
+            <Typography variant="h6" sx={{ mb: 2 }}>AI Review Language Management</Typography>
+            <AiLanguageManager />
+          </Box>
+        )}
+        {activeTab === 5 && user?.role === 'super_admin' && (
+          <Box>
+            <Typography variant="h6" sx={{ mb: 2 }}>AI Review Services and Keywords</Typography>
+            <AiPromptOptionsManager />
+          </Box>
+        )}
+        {activeTab === 6 && user?.role === 'super_admin' && (
+          <Box>
+            <Typography variant="h6" sx={{ mb: 2 }}>AI Review Analytics</Typography>
+            <AiAnalyticsDashboard />
+          </Box>
+        )}
+        {activeTab === 5 && user?.role === 'admin' && (
+          <Box>
+            <Typography variant="h6" sx={{ mb: 2 }}>AI Review Services and Keywords</Typography>
+            <AiPromptOptionsManager />
           </Box>
         )}
       </Box>

@@ -79,7 +79,7 @@ export default function BusinessTable() {
     const totalCount = data?.total || 0
 
     return (
-        <Paper sx={{ p: 3, backgroundColor: '#121212', color: '#fff', borderRadius: 3, mb: 4 }}>
+        <Paper sx={{ p: { xs: 2, sm: 3 }, backgroundColor: '#121212', color: '#fff', borderRadius: 3, mb: 4, minWidth: 0 }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>Explore Businesses</Typography>
@@ -91,7 +91,7 @@ export default function BusinessTable() {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         sx={{
-                            minWidth: 200,
+                            minWidth: { xs: '100%', sm: 200 },
                             input: { color: '#fff' },
                             '& .MuiOutlinedInput-root': {
                                 '& fieldset': { borderColor: '#444' },
@@ -107,7 +107,7 @@ export default function BusinessTable() {
                             ),
                         }}
                     />
-                    <FormControl size="small" sx={{ minWidth: 150 }}>
+                    <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 150 } }}>
                         <Select
                             value={hasLinkFilter}
                             onChange={(e) => setHasLinkFilter(e.target.value)}
@@ -130,7 +130,7 @@ export default function BusinessTable() {
                             <MenuItem value="false">No Link</MenuItem>
                         </Select>
                     </FormControl>
-                    <FormControl size="small" sx={{ minWidth: 150 }}>
+                    <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 150 } }}>
                         <Select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
@@ -157,7 +157,7 @@ export default function BusinessTable() {
                 </Box>
             </Box>
 
-            <TableContainer>
+            <TableContainer sx={{ overflowX: 'auto' }}>
                 <Table>
                     <TableHead>
                         <TableRow sx={{ backgroundColor: '#1e1e1e' }}>

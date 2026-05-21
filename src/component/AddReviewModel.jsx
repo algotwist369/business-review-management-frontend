@@ -98,7 +98,7 @@ const AddReviewModal = ({ showModal, setShowModal, initialData = null, preselect
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/60 backdrop-blur-sm">
-            <div className="w-[500px] bg-black border border-white/10 p-6 rounded-2xl shadow-2xl space-y-5 text-white">
+            <div className="w-[calc(100vw-24px)] max-w-[500px] max-h-[calc(100vh-24px)] overflow-y-auto bg-black border border-white/10 p-4 sm:p-6 rounded-2xl shadow-2xl space-y-5 text-white">
 
                 <h2 className="text-2xl font-bold text-center">{isEdit ? 'Edit Review' : 'Add Review'}</h2>
 

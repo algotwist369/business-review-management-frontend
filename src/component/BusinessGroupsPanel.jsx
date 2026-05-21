@@ -114,7 +114,7 @@ const BusinessGroupsPanel = ({ onAddReview }) => {
     }
 
     return (
-        <Paper sx={{ p: 3, backgroundColor: '#121212', color: '#fff', borderRadius: 3, mb: 4 }}>
+        <Paper sx={{ p: { xs: 2, sm: 3 }, backgroundColor: '#121212', color: '#fff', borderRadius: 3, mb: 4, minWidth: 0 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
                     <FaLayerGroup style={{ display: 'inline', marginRight: 8 }} />
@@ -129,7 +129,7 @@ const BusinessGroupsPanel = ({ onAddReview }) => {
                     value={groupName}
                     onChange={(e) => setGroupName(e.target.value)}
                     sx={{
-                        minWidth: 260,
+                        minWidth: { xs: '100%', sm: 260 },
                         input: { color: '#fff' },
                         label: { color: '#aaa' },
                         '& .MuiOutlinedInput-root': {
@@ -187,7 +187,7 @@ const BusinessGroupsPanel = ({ onAddReview }) => {
                         ))}
                     </Tabs>
 
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: 1, mb: 2 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                             {isEditingGroupName ? (
                                 <>
@@ -196,7 +196,7 @@ const BusinessGroupsPanel = ({ onAddReview }) => {
                                         value={editingGroupName}
                                         onChange={(e) => setEditingGroupName(e.target.value)}
                                         sx={{
-                                            minWidth: 220,
+                                            minWidth: { xs: '100%', sm: 220 },
                                             input: { color: '#fff' },
                                             '& .MuiOutlinedInput-root': {
                                                 '& fieldset': { borderColor: '#444' },
@@ -311,7 +311,7 @@ const BusinessGroupsPanel = ({ onAddReview }) => {
                             No businesses in this group.
                         </Typography>
                     ) : (
-                        <TableContainer>
+                        <TableContainer sx={{ overflowX: 'auto' }}>
                             <Table>
                                 <TableHead>
                                     <TableRow sx={{ backgroundColor: '#1e1e1e' }}>

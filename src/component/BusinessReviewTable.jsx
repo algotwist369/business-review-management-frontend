@@ -225,13 +225,14 @@ export default function BusinessReviewTable({ onEdit, setShowModal, userId, isAd
 
             {/* 🔎 Filters & Actions */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap', width: { xs: '100%', sm: 'auto' } }}>
                     <TextField
                         size="small"
                         placeholder="Search Business..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         sx={{
+                            width: { xs: '100%', sm: 'auto' },
                             input: { color: '#fff' },
                             '& .MuiOutlinedInput-root': {
                                 '& fieldset': { borderColor: '#444' },
@@ -248,7 +249,7 @@ export default function BusinessReviewTable({ onEdit, setShowModal, userId, isAd
                         }}
                     />
 
-                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                    <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 120 } }}>
                         <InputLabel sx={{ color: '#aaa' }}>Filter By</InputLabel>
                         <Select
                             value={filterType}
@@ -279,6 +280,7 @@ export default function BusinessReviewTable({ onEdit, setShowModal, userId, isAd
                                 onChange={(e) => setStartDate(e.target.value)}
                                 InputLabelProps={{ shrink: true }}
                                 sx={{
+                                    width: { xs: '100%', sm: 'auto' },
                                     input: { color: '#fff' },
                                     label: { color: '#aaa' },
                                     '& .MuiOutlinedInput-root': {
@@ -295,6 +297,7 @@ export default function BusinessReviewTable({ onEdit, setShowModal, userId, isAd
                                 onChange={(e) => setEndDate(e.target.value)}
                                 InputLabelProps={{ shrink: true }}
                                 sx={{
+                                    width: { xs: '100%', sm: 'auto' },
                                     input: { color: '#fff' },
                                     label: { color: '#aaa' },
                                     '& .MuiOutlinedInput-root': {
@@ -326,7 +329,7 @@ export default function BusinessReviewTable({ onEdit, setShowModal, userId, isAd
             </Box>
 
             {/* 📋 Table */}
-            <TableContainer>
+            <TableContainer sx={{ overflowX: 'auto' }}>
                 <Table>
                     <TableHead>
                         <TableRow sx={{ backgroundColor: '#1e1e1e' }}>

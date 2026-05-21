@@ -23,12 +23,12 @@ const modalStyle = {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    width: 500,
+    width: { xs: 'calc(100vw - 24px)', sm: 500 },
     maxHeight: '80vh',
     bgcolor: '#1e1e1e',
     border: '1px solid #333',
     boxShadow: 24,
-    p: 4,
+    p: { xs: 2, sm: 4 },
     borderRadius: 2,
     color: '#fff',
     display: 'flex',
@@ -126,6 +126,9 @@ const BusinessAssignmentModal = ({ open, onClose, user }) => {
                 <Tabs
                     value={activeTab}
                     onChange={(_, newValue) => setActiveTab(newValue)}
+                    variant="scrollable"
+                    scrollButtons="auto"
+                    allowScrollButtonsMobile
                     sx={{
                         mb: 1,
                         minHeight: 36,
@@ -175,7 +178,7 @@ const BusinessAssignmentModal = ({ open, onClose, user }) => {
                     )}
                 </Box>
 
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, flexWrap: 'wrap' }}>
                     <Button onClick={onClose} sx={{ color: '#aaa' }}>Cancel</Button>
                     <Button
                         variant="contained"
