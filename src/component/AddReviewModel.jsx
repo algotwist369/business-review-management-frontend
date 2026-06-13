@@ -19,7 +19,7 @@ const AddReviewModal = ({ showModal, setShowModal, initialData = null, preselect
     const isEdit = !!initialData
     const [query, setQuery] = useState('')
     const [selectedBusiness, setSelectedBusiness] = useState(null)
-    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
+    const [selectedDate, setSelectedDate] = useState(localStorage.getItem('selectedReviewDate') || new Date().toISOString().split('T')[0])
     const [reviewCount, setReviewCount] = useState('')
     const [reviewLink, setReviewLink] = useState('')
 
@@ -36,11 +36,15 @@ const AddReviewModal = ({ showModal, setShowModal, initialData = null, preselect
             setReviewLink(initialData.review_link?.join(', ') || '')
         } else {
             setSelectedBusiness(preselectedBusiness || null)
-            setSelectedDate(new Date().toISOString().split('T')[0])
+            setSelectedDate(localStorage.getItem('selectedReviewDate') || new Date().toISOString().split('T')[0])
             setReviewCount('')
             setReviewLink('')
         }
     }, [initialData, showModal, preselectedBusiness])
+
+    useEffect(() => {
+        localStorage.setItem('selectedReviewDate', selectedDate)
+    }, [selectedDate])
 
     if (!showModal) return null
 
@@ -102,6 +106,22 @@ const AddReviewModal = ({ showModal, setShowModal, initialData = null, preselect
 
                 <h2 className="text-2xl font-bold text-center">{isEdit ? 'Edit Review' : 'Add Review'}</h2>
 
+                {/* Date Field */}
+                <Field>
+                    <Label className="text-sm font-medium">
+                        Select Date
+                    </Label>
+                    <Input
+                        type="date"
+                        value={selectedDate}
+                        onChange={(e) => setSelectedDate(e.target.value)}
+                        className="mt-2 w-full rounded-lg bg-black border border-white/20 px-3 py-2 text-white  
+                        
+                        [&::-webkit-calendar-picker-indicator]:invert
+                        [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                    />
+                </Field>
+
                 {/* Dropdown */}
                 <Combobox value={selectedBusiness} onChange={setSelectedBusiness} onClose={() => setQuery('')}>
                     <div className="relative">
@@ -134,24 +154,6 @@ const AddReviewModal = ({ showModal, setShowModal, initialData = null, preselect
                         ))}
                     </ComboboxOptions>
                 </Combobox>
-
-                {/* Date Field */}
-                {selectedBusiness && (
-                    <Field>
-                        <Label className="text-sm font-medium">
-                            Select Date
-                        </Label>
-                        <Input
-                            type="date"
-                            value={selectedDate}
-                            onChange={(e) => setSelectedDate(e.target.value)}
-                            className="mt-2 w-full rounded-lg bg-black border border-white/20 px-3 py-2 text-white  
-                            
-                            [&::-webkit-calendar-picker-indicator]:invert
-                            [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-                        />
-                    </Field>
-                )}
 
                 {/* Review Input */}
                 {selectedDate && (
