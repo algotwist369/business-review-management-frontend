@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react'
+import React, { Suspense, lazy, useState, useEffect } from 'react'
 import { Routes, Route, useNavigate } from 'react-router-dom'
 import Navbar from './component/Navbar'
-import Home from './pages/Home'
 import GoogleLoginModal from './component/GoogleLoginModal'
 import PasswordModal from './component/PasswordModal'
-import Admin from './pages/Admin'
-import AiReviewGenerator from './pages/AiReviewGenerator'
 import { useEmailLogin, useGoogleAuth, useSignup } from './hooks/useUsers'
 import { getCurrentUser } from './apis/user.api'
 import Box from '@mui/material/Box'
+import CircularProgress from '@mui/material/CircularProgress'
+
+const Home = lazy(() => import('./pages/Home'))
+const Admin = lazy(() => import('./pages/Admin'))
+const AiReviewGenerator = lazy(() => import('./pages/AiReviewGenerator'))
 
 const App = () => {
   const [loginOpen, setLoginOpen] = useState(false)
@@ -88,18 +90,26 @@ const App = () => {
       />
 
       <Box component="main" sx={{ pt: { xs: 0, md: '64px' }, minWidth: 0 }}>
-        <Routes>
-          <Route path="/" element={<Home onLoginClick={() => setLoginOpen(true)} user={user} />} />
-          <Route
-            path="/admin"
-            element={['admin', 'super_admin'].includes(user?.role) ? <Admin user={user} /> : <Home onLoginClick={() => setLoginOpen(true)} user={user} />}
-          />
-          <Route
-            path="/ai-reviews"
-            element={user ? <AiReviewGenerator user={user} /> : <Home onLoginClick={() => setLoginOpen(true)} user={user} />}
-          />
-          <Route path="*" element={<div><h1>404 Not Found</h1></div>} />
-        </Routes>
+        <Suspense
+          fallback={
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+              <CircularProgress />
+            </Box>
+          }
+        >
+          <Routes>
+            <Route path="/" element={<Home onLoginClick={() => setLoginOpen(true)} user={user} />} />
+            <Route
+              path="/admin"
+              element={['admin', 'super_admin'].includes(user?.role) ? <Admin user={user} /> : <Home onLoginClick={() => setLoginOpen(true)} user={user} />}
+            />
+            <Route
+              path="/ai-reviews"
+              element={user ? <AiReviewGenerator user={user} /> : <Home onLoginClick={() => setLoginOpen(true)} user={user} />}
+            />
+            <Route path="*" element={<div><h1>404 Not Found</h1></div>} />
+          </Routes>
+        </Suspense>
       </Box>
 
       {/* Global Login Modal */}

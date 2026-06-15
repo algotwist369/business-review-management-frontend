@@ -9,6 +9,7 @@ import AiDatasetManager from '../component/Admin/AiDatasetManager'
 import AiLanguageManager from '../component/Admin/AiLanguageManager'
 import AiAnalyticsDashboard from '../component/Admin/AiAnalyticsDashboard'
 import AiPromptOptionsManager from '../component/Admin/AiPromptOptionsManager'
+import ReviewPaymentActions from '../component/Admin/ReviewPaymentActions'
 
 const Admin = ({ user }) => {
   const [activeTab, setActiveTab] = useState(0)
@@ -90,6 +91,7 @@ const Admin = ({ user }) => {
                 </Box>
               )}
             </Box>
+            <ReviewPaymentActions user={user} />
             <BusinessReviewTable
               onEdit={handleEditReview}
               setShowModal={setShowReviewModal}

@@ -25,15 +25,23 @@ import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import SearchIcon from '@mui/icons-material/Search'
 import ButtonComponent from './ButtonComponent'
-import { useReviewsByUser, useDeleteReview, useMarkAsPaid, useMarkAsPaidCustomDate } from '../hooks/useReviews'
+import {
+    useReviewsByUser,
+    useDeleteReview,
+    useMarkAsPaid,
+    useMarkAsPaidCustomDate,
+    useMarkAsUnpaid,
+    useMarkAsUnpaidCustomDate,
+} from '../hooks/useReviews'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import PaymentsIcon from '@mui/icons-material/Payments'
 import DoneAllIcon from '@mui/icons-material/DoneAll'
+import MoneyOffIcon from '@mui/icons-material/MoneyOff'
 
 export default function BusinessReviewTable({ onEdit, setShowModal, userId, isAdmin = false }) {
     const [search, setSearch] = useState('')
     const [page, setPage] = useState(0)
-    const [rowsPerPage, setRowsPerPage] = useState(5)
+    const [rowsPerPage, setRowsPerPage] = useState(10)
     const [selected, setSelected] = useState([])
     const [startDate, setStartDate] = useState('')
     const [endDate, setEndDate] = useState('')
@@ -50,6 +58,9 @@ export default function BusinessReviewTable({ onEdit, setShowModal, userId, isAd
     const deleteMutation = useDeleteReview()
     const markAsPaidMutation = useMarkAsPaid()
     const markAsPaidCustomDateMutation = useMarkAsPaidCustomDate()
+    const markAsUnpaidMutation = useMarkAsUnpaid()
+    const markAsUnpaidCustomDateMutation = useMarkAsUnpaidCustomDate()
+    const isBulkPaymentUpdating = markAsPaidCustomDateMutation.isPending || markAsUnpaidCustomDateMutation.isPending
 
     const rows = data?.data || []
     const totalCount = data?.total_business || 0
@@ -57,6 +68,7 @@ export default function BusinessReviewTable({ onEdit, setShowModal, userId, isAd
         totalReviews: data?.total_review_count || 0,
         paidReviews: data?.total_paid_review_count || 0,
         pendingReviews: data?.total_pending_review_count || 0,
+        paidAmount: data?.total_paid_amount || 0,
         paidReviewsLocked: data?.total_paid_review_count_locked || 0,
         totalEntries: data?.total_business || 0,
         paidEntries: data?.total_paid_business || 0,
@@ -64,14 +76,35 @@ export default function BusinessReviewTable({ onEdit, setShowModal, userId, isAd
         adjustmentExtraPaid: data?.adjustment_extra_paid || 0,
     }
 
+    const formatCurrency = (value) =>
+        new Intl.NumberFormat('en-IN', {
+            style: 'currency',
+            currency: 'INR',
+            maximumFractionDigits: 2,
+        }).format(Number(value) || 0)
+
     const handleDelete = (id) => {
         if (window.confirm('Are you sure you want to delete this review?')) {
             deleteMutation.mutate(id)
         }
     }
 
-    const handleMarkAsPaid = (id) => {
-        markAsPaidMutation.mutate(id)
+    const handleMarkAsPaid = (row) => {
+        const payableReviews = row?.review_count || 0
+        if (window.confirm(`Mark ${payableReviews} review${payableReviews === 1 ? '' : 's'} as paid using the saved global price?`)) {
+            markAsPaidMutation.mutate(
+                { id: row._id },
+                {
+                    onError: (err) => alert(err?.error || 'Failed to mark review as paid'),
+                }
+            )
+        }
+    }
+
+    const handleMarkAsUnpaid = (id) => {
+        if (window.confirm('Are you sure you want to mark this review as unpaid?')) {
+            markAsUnpaidMutation.mutate(id)
+        }
     }
 
     const handleBulkMarkAsPaid = () => {
@@ -79,8 +112,39 @@ export default function BusinessReviewTable({ onEdit, setShowModal, userId, isAd
             alert('Please select both start and end dates')
             return
         }
-        if (window.confirm(`Are you sure you want to mark reviews from ${startDate} to ${endDate} as paid?`)) {
-            markAsPaidCustomDateMutation.mutate({ startDate, endDate })
+        if (!userId) {
+            alert('User is required to update reviews')
+            return
+        }
+        if (window.confirm(`Are you sure you want to mark reviews from ${startDate} to ${endDate} as paid using the saved global price?`)) {
+            markAsPaidCustomDateMutation.mutate(
+                { startDate, endDate, userId },
+                {
+                    onSuccess: (result) => {
+                        alert(`Marked ${result?.paidReviewCount || 0} reviews as paid.\nTotal amount: ${formatCurrency(result?.totalAmount || 0)}`)
+                    },
+                    onError: (err) => alert(err?.error || 'Failed to mark reviews as paid'),
+                }
+            )
+        }
+    }
+
+    const handleBulkMarkAsUnpaid = () => {
+        if (!startDate || !endDate) {
+            alert('Please select both start and end dates')
+            return
+        }
+        if (!userId) {
+            alert('User is required to update reviews')
+            return
+        }
+        if (window.confirm(`Are you sure you want to mark reviews from ${startDate} to ${endDate} as unpaid?`)) {
+            markAsUnpaidCustomDateMutation.mutate(
+                { startDate, endDate, userId },
+                {
+                    onError: (err) => alert(err?.error || 'Failed to mark reviews as unpaid'),
+                }
+            )
         }
     }
 
@@ -221,6 +285,7 @@ export default function BusinessReviewTable({ onEdit, setShowModal, userId, isAd
                 <StatItem label="Total Business" value={stats.totalEntries} />
                 <StatItem label="Paid Business" value={stats.paidEntries} color="#4caf50" />
                 <StatItem label="Pending Reviews" value={stats.pendingReviews} color="#ff9800" />
+                <StatItem label="Paid Amount" value={formatCurrency(stats.paidAmount)} color="#8bc34a" />
             </Box>
 
             {/* 🔎 Filters & Actions */}
@@ -308,14 +373,25 @@ export default function BusinessReviewTable({ onEdit, setShowModal, userId, isAd
                         </>
                     )}
 
-                    {isAdmin && startDate && endDate && (
-                        <ButtonComponent
-                            text="Mark Selection as Paid"
-                            onClick={handleBulkMarkAsPaid}
-                            variant="contained"
-                            color="success"
-                            sx={{ backgroundColor: '#2e7d32', '&:hover': { backgroundColor: '#1b5e20' } }}
-                        />
+                    {isAdmin && filterType === 'custom' && startDate && endDate && (
+                        <>
+                            <ButtonComponent
+                                text={markAsPaidCustomDateMutation.isPending ? 'Marking Paid...' : 'Mark Range as Paid'}
+                                onClick={handleBulkMarkAsPaid}
+                                disabled={isBulkPaymentUpdating}
+                                variant="contained"
+                                color="success"
+                                sx={{ backgroundColor: '#2e7d32', '&:hover': { backgroundColor: '#1b5e20' } }}
+                            />
+                            <ButtonComponent
+                                text={markAsUnpaidCustomDateMutation.isPending ? 'Marking Unpaid...' : 'Mark Range as Unpaid'}
+                                onClick={handleBulkMarkAsUnpaid}
+                                disabled={isBulkPaymentUpdating}
+                                variant="contained"
+                                color="warning"
+                                sx={{ backgroundColor: '#ef6c00', '&:hover': { backgroundColor: '#e65100' } }}
+                            />
+                        </>
                     )}
                 </Box>
 
@@ -433,29 +509,42 @@ export default function BusinessReviewTable({ onEdit, setShowModal, userId, isAd
                                     <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
                                         {isAdmin && !row.is_paid && (
                                             <IconButton
-                                                onClick={() => handleMarkAsPaid(row._id)}
+                                                onClick={() => handleMarkAsPaid(row)}
                                                 sx={{ color: '#4caf50' }}
                                                 title="Mark as Paid"
+                                                disabled={markAsPaidMutation.isPending}
                                             >
                                                 <PaymentsIcon />
                                             </IconButton>
                                         )}
                                         {isAdmin && row.is_paid && row.review_count > row.paid_review_count && (
                                             <IconButton
-                                                onClick={() => handleMarkAsPaid(row._id)}
+                                                onClick={() => handleMarkAsPaid(row)}
                                                 sx={{ color: '#4caf50' }}
                                                 title="Pay Adjustment"
+                                                disabled={markAsPaidMutation.isPending}
                                             >
                                                 <PaymentsIcon />
                                             </IconButton>
                                         )}
                                         {isAdmin && row.is_paid && row.paid_review_count > 0 && row.review_count < row.paid_review_count && (
                                             <IconButton
-                                                onClick={() => handleMarkAsPaid(row._id)}
+                                                onClick={() => handleMarkAsPaid(row)}
                                                 sx={{ color: '#2196f3' }}
                                                 title="Settle"
+                                                disabled={markAsPaidMutation.isPending}
                                             >
                                                 <DoneAllIcon />
+                                            </IconButton>
+                                        )}
+                                        {isAdmin && row.is_paid && (
+                                            <IconButton
+                                                onClick={() => handleMarkAsUnpaid(row._id)}
+                                                sx={{ color: '#ff9800' }}
+                                                title="Mark as Unpaid"
+                                                disabled={markAsUnpaidMutation.isPending}
+                                            >
+                                                <MoneyOffIcon />
                                             </IconButton>
                                         )}
                                         <IconButton
@@ -496,7 +585,7 @@ export default function BusinessReviewTable({ onEdit, setShowModal, userId, isAd
                 onPageChange={handleChangePage}
                 rowsPerPage={rowsPerPage}
                 onRowsPerPageChange={handleChangeRowsPerPage}
-                rowsPerPageOptions={[5, 10, 25]}
+                rowsPerPageOptions={[10, 25, 50, 100, 200, 500]}
                 sx={{
                     color: '#fff',
                     '.MuiTablePagination-selectIcon': { color: '#fff' },

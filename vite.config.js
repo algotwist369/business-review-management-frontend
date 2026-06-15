@@ -7,4 +7,14 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     react()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('@mui') || id.includes('@emotion')) return 'mui'
+          return undefined
+        },
+      },
+    },
+  },
 })

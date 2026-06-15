@@ -17,6 +17,24 @@ export const useReviewStats = () => {
     });
 };
 
+export const usePaymentSetting = (enabled = true) => {
+    return useQuery({
+        queryKey: ['reviewPaymentSetting'],
+        queryFn: reviewApi.getPaymentSetting,
+        enabled,
+    });
+};
+
+export const useUpdatePaymentSetting = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: reviewApi.updatePaymentSetting,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['reviewPaymentSetting'] });
+        },
+    });
+};
+
 export const useReviewsForBusiness = (businessId, params) => {
     return useQuery({
         queryKey: ['reviews', 'business', businessId, params],
@@ -64,6 +82,7 @@ export const useMarkAsPaid = () => {
         mutationFn: reviewApi.markAsPaid,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['reviews'] });
+            queryClient.invalidateQueries({ queryKey: ['reviewStats'] });
         },
     });
 };
@@ -74,6 +93,29 @@ export const useMarkAsPaidCustomDate = () => {
         mutationFn: reviewApi.markAsPaidCustomDate,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['reviews'] });
+            queryClient.invalidateQueries({ queryKey: ['reviewStats'] });
+        },
+    });
+};
+
+export const useMarkAsUnpaid = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: reviewApi.markAsUnpaid,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['reviews'] });
+            queryClient.invalidateQueries({ queryKey: ['reviewStats'] });
+        },
+    });
+};
+
+export const useMarkAsUnpaidCustomDate = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: reviewApi.markAsUnpaidCustomDate,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['reviews'] });
+            queryClient.invalidateQueries({ queryKey: ['reviewStats'] });
         },
     });
 };
