@@ -35,8 +35,9 @@ import ScopeAssignmentModal from './ScopeAssignmentModal'
 const AdminUsersTable = ({ onViewReviews, onViewGbpUpdates, user: currentUser }) => {
     const [search, setSearch] = useState('')
     const [page, setPage] = useState(0)
-    const [rowsPerPage, setRowsPerPage] = useState(5)
+    const [rowsPerPage, setRowsPerPage] = useState(10)
     const [selected, setSelected] = useState([])
+    const [statusFilter, setStatusFilter] = useState('all') // 'all', 'active', 'inactive'
     const [assignmentModalOpen, setAssignmentModalOpen] = useState(false)
     const [selectedAdmin, setSelectedAdmin] = useState(null)
     const [businessAssignmentModalOpen, setBusinessAssignmentModalOpen] = useState(false)
@@ -50,6 +51,7 @@ const AdminUsersTable = ({ onViewReviews, onViewGbpUpdates, user: currentUser })
     const { data, isLoading, isError, error } = useUsers({
         page: page + 1,
         limit: rowsPerPage,
+        is_active: statusFilter === 'all' ? undefined : (statusFilter === 'active' ? 'true' : 'false')
     })
 
     const updateStatusMutation = useUpdateUserStatus()
@@ -148,8 +150,8 @@ const AdminUsersTable = ({ onViewReviews, onViewGbpUpdates, user: currentUser })
                 borderRadius: 3,
             }}
         >
-            {/* 🔎 Search */}
-            <Box sx={{ mb: 3 }}>
+            {/* 🔎 Search & Status Filter */}
+            <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
                 <TextField
                     size="small"
                     placeholder="Search User..."
@@ -172,6 +174,37 @@ const AdminUsersTable = ({ onViewReviews, onViewGbpUpdates, user: currentUser })
                         ),
                     }}
                 />
+
+                <Select
+                    size="small"
+                    value={statusFilter}
+                    onChange={(e) => {
+                        setStatusFilter(e.target.value)
+                        setPage(0)
+                    }}
+                    sx={{
+                        color: '#fff',
+                        backgroundColor: '#181818',
+                        '& .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#444',
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#666',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#fff',
+                        },
+                        '& .MuiSvgIcon-root': {
+                            color: '#aaa',
+                        },
+                        minWidth: 150,
+                        height: 40
+                    }}
+                >
+                    <MenuItem value="all">All Status</MenuItem>
+                    <MenuItem value="active">Active</MenuItem>
+                    <MenuItem value="inactive">Inactive</MenuItem>
+                </Select>
             </Box>
 
             {/* 📋 Table */}

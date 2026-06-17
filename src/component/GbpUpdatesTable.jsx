@@ -26,8 +26,9 @@ import EditIcon from '@mui/icons-material/Edit'
 import LinkIcon from '@mui/icons-material/Link'
 import FilterListIcon from '@mui/icons-material/FilterList'
 import SortIcon from '@mui/icons-material/Sort'
+import DeleteIcon from '@mui/icons-material/Delete'
 import { useBusinesses } from '../hooks/useBusinesses'
-import { useGbpUpdates, useGbpUpdatesSummary } from '../hooks/useGbpUpdates'
+import { useGbpUpdates, useGbpUpdatesSummary, useDeleteGbpUpdate } from '../hooks/useGbpUpdates'
 import UpdateGbpModal from './UpdateGbpModal'
 
 const getCurrentMonthStr = () => {
@@ -83,6 +84,7 @@ export default function GbpUpdatesTable({ selectedUser }) {
 
     // Load monthly summary statistics
     const { data: summaryData } = useGbpUpdatesSummary(month)
+    const deleteMutation = useDeleteGbpUpdate()
 
     const isLoading = loadingBusinesses || loadingUpdates
 
@@ -234,6 +236,16 @@ export default function GbpUpdatesTable({ selectedUser }) {
         setSelectedBusiness(row.business)
         setSelectedUpdate(row.update._id ? row.update : null)
         setModalOpen(true)
+    }
+
+    const handleDeleteClick = (id) => {
+        if (window.confirm('Are you sure you want to clear/delete this monthly update record?')) {
+            deleteMutation.mutate(id, {
+                onError: (err) => {
+                    alert(err?.error || 'Failed to delete record')
+                }
+            })
+        }
     }
 
     return (
@@ -466,6 +478,7 @@ export default function GbpUpdatesTable({ selectedUser }) {
                                                 {business.business_name}
                                                 <Typography variant="caption" sx={{ display: 'block', color: '#666', fontSize: '0.7rem' }}>
                                                     Loc: {business.location || 'N/A'} | Code: {business.short_code || 'N/A'}
+                                                    {update._id && update.user_id && ` | User: ${update.user_id.username || update.user_id.email.split('@')[0]}`}
                                                 </Typography>
                                             </TableCell>
                                             
@@ -521,6 +534,15 @@ export default function GbpUpdatesTable({ selectedUser }) {
                                                     >
                                                         <EditIcon sx={{ fontSize: 20 }} />
                                                     </IconButton>
+                                                    {update._id && (
+                                                        <IconButton
+                                                            onClick={() => handleDeleteClick(update._id)}
+                                                            sx={{ color: '#ff4d4d' }}
+                                                            title="Clear monthly record data"
+                                                        >
+                                                            <DeleteIcon sx={{ fontSize: 20 }} />
+                                                        </IconButton>
+                                                    )}
                                                     {business.business_link && (
                                                         <IconButton
                                                             component="a"

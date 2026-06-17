@@ -8,8 +8,8 @@ export const getCurrentUser = () => apiClient.get('/users/me');
 export const updatePassword = (data) => apiClient.patch('/users/password', data);
 
 // Admin only
-export const getAllUsers = ({ page = 1, limit = 20 }) =>
-    apiClient.get('/users', { params: { page, limit } });
+export const getAllUsers = (params) =>
+    apiClient.get('/users', { params });
 
 export const getUserById = (id) => apiClient.get(`/users/${id}`);
 

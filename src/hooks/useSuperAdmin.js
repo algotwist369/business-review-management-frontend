@@ -20,3 +20,13 @@ export const useUpdateUserRole = () => {
         },
     });
 };
+
+export const useAssignUsersToAdminBulk = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: superAdminApi.assignUsersToAdminBulk,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+        },
+    });
+};

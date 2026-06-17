@@ -14,7 +14,7 @@ import {
 } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
 import { useUsers } from '../../hooks/useUsers'
-import { useAssignUserToAdmin } from '../../hooks/useSuperAdmin'
+import { useAssignUsersToAdminBulk } from '../../hooks/useSuperAdmin'
 
 const modalStyle = {
     position: 'absolute',
@@ -39,7 +39,7 @@ const UserAssignmentModal = ({ open, onClose, admin }) => {
 
     // Fetch all users (unpaged or large limit for selection)
     const { data: usersData, isLoading } = useUsers({ page: 1, limit: 100 })
-    const assignMutation = useAssignUserToAdmin()
+    const assignBulkMutation = useAssignUsersToAdminBulk()
 
     const users = usersData?.data || []
 
@@ -47,7 +47,12 @@ const UserAssignmentModal = ({ open, onClose, admin }) => {
         if (open && admin && users.length > 0) {
             // Initially select users who are already managed by this admin
             const assigned = users
-                .filter(u => u.managed_by === admin._id)
+                .filter(u => {
+                    if (Array.isArray(u.managed_by)) {
+                        return u.managed_by.some(id => id?.toString() === admin._id?.toString());
+                    }
+                    return u.managed_by?.toString() === admin._id?.toString();
+                })
                 .map(u => u._id)
             setSelectedUsers(assigned)
         }
@@ -66,21 +71,8 @@ const UserAssignmentModal = ({ open, onClose, admin }) => {
     }
 
     const handleSave = async () => {
-        // This is a simplified approach. In a real app, you might want a bulk assignment API.
-        // For now, we'll assign each selected user to this admin.
-        // Note: The backend assignUserToAdmin takes userId and adminId.
-
         try {
-            // Find users who need to be assigned to this admin
-            const ToAssign = selectedUsers
-
-            // To properly sync, we'd also need to unassign users who were removed.
-            // But let's keep it simple for now as per instructions.
-
-            for (const userId of ToAssign) {
-                await assignMutation.mutateAsync({ userId, adminId: admin._id })
-            }
-
+            await assignBulkMutation.mutateAsync({ adminId: admin._id, userIds: selectedUsers })
             onClose()
         } catch (error) {
             console.error('Assignment failed', error)
@@ -138,7 +130,29 @@ const UserAssignmentModal = ({ open, onClose, admin }) => {
                                         sx={{ color: '#aaa', '&.Mui-checked': { color: '#fff' } }}
                                     />
                                     <ListItemText
-                                        primary={user.username || user.email.split('@')[0]}
+                                        primary={
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <span>{user.username || user.email.split('@')[0]}</span>
+                                                {!user.is_active && (
+                                                    <Box
+                                                        component="span"
+                                                        sx={{
+                                                            px: 0.8,
+                                                            py: 0.2,
+                                                            borderRadius: 0.5,
+                                                            fontSize: '0.65rem',
+                                                            backgroundColor: 'rgba(244, 67, 54, 0.15)',
+                                                            color: '#f44336',
+                                                            border: '1px solid #f44336',
+                                                            fontWeight: 'bold',
+                                                            textTransform: 'uppercase'
+                                                        }}
+                                                    >
+                                                        Inactive
+                                                    </Box>
+                                                )}
+                                            </Box>
+                                        }
                                         secondary={user.email}
                                         secondaryTypographyProps={{ sx: { color: '#aaa', fontSize: '0.8rem' } }}
                                     />
@@ -153,9 +167,9 @@ const UserAssignmentModal = ({ open, onClose, admin }) => {
                     <Button
                         variant="contained"
                         onClick={handleSave}
-                        disabled={assignMutation.isPending}
+                        disabled={assignBulkMutation.isPending}
                     >
-                        {assignMutation.isPending ? 'Saving...' : 'Save Assignments'}
+                        {assignBulkMutation.isPending ? 'Saving...' : 'Save Assignments'}
                     </Button>
                 </Box>
             </Box>
