@@ -20,3 +20,6 @@ export const deleteUser = (id) => apiClient.delete(`/users/${id}`);
 
 export const assignBusinessesToUser = (id, businessIds) =>
     apiClient.post(`/users/${id}/assign-businesses`, { businessIds });
+
+export const assignScopesToUser = (id, scopes) =>
+    apiClient.post(`/users/${id}/assign-scopes`, { scopes });

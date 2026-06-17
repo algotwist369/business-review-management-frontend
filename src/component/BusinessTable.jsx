@@ -42,10 +42,13 @@ export default function BusinessTable() {
         return () => clearTimeout(timer)
     }, [search])
 
-    // Reset pagination when filters change
-    useEffect(() => {
+    // Reset pagination when filters change during render to prevent cascading renders
+    const [lastFilterKey, setLastFilterKey] = useState('')
+    const currentFilterKey = `${debouncedSearch}-${hasLinkFilter}-${statusFilter}-${sortBy}-${sortOrder}`
+    if (lastFilterKey !== currentFilterKey) {
         setPage(0)
-    }, [debouncedSearch, hasLinkFilter, statusFilter, sortBy, sortOrder])
+        setLastFilterKey(currentFilterKey)
+    }
 
     const { data, isLoading, isFetching, isError, error } = useBusinesses({
         page: page + 1,

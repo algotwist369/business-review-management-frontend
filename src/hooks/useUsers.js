@@ -75,3 +75,13 @@ export const useAssignBusinessesToUser = () => {
         },
     });
 };
+
+export const useAssignScopesToUser = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, scopes }) => userApi.assignScopesToUser(id, scopes),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+        },
+    });
+};

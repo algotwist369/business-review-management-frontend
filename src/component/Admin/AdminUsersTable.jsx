@@ -22,14 +22,17 @@ import VisibilityIcon from '@mui/icons-material/Visibility'
 import SearchIcon from '@mui/icons-material/Search'
 import GroupsIcon from '@mui/icons-material/Groups'
 import BusinessIcon from '@mui/icons-material/Business'
+import VpnKeyIcon from '@mui/icons-material/VpnKey'
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth'
 import { Select, MenuItem } from '@mui/material'
 import { useUsers, useUpdateUserStatus, useDeleteUser } from '../../hooks/useUsers'
 import { useUpdateUserRole } from '../../hooks/useSuperAdmin'
 import { useUpdateAiReviewPermission } from '../../hooks/useAiReviews'
 import UserAssignmentModal from './UserAssignmentModal'
 import BusinessAssignmentModal from './BusinessAssignmentModal'
+import ScopeAssignmentModal from './ScopeAssignmentModal'
 
-const AdminUsersTable = ({ onViewReviews, user: currentUser }) => {
+const AdminUsersTable = ({ onViewReviews, onViewGbpUpdates, user: currentUser }) => {
     const [search, setSearch] = useState('')
     const [page, setPage] = useState(0)
     const [rowsPerPage, setRowsPerPage] = useState(5)
@@ -38,6 +41,8 @@ const AdminUsersTable = ({ onViewReviews, user: currentUser }) => {
     const [selectedAdmin, setSelectedAdmin] = useState(null)
     const [businessAssignmentModalOpen, setBusinessAssignmentModalOpen] = useState(false)
     const [selectedUserForBusiness, setSelectedUserForBusiness] = useState(null)
+    const [scopeModalOpen, setScopeModalOpen] = useState(false)
+    const [selectedUserForScope, setSelectedUserForScope] = useState(null)
 
     const isSuperAdmin = currentUser?.role === 'super_admin'
     const isAdmin = currentUser?.role === 'admin'
@@ -82,8 +87,6 @@ const AdminUsersTable = ({ onViewReviews, user: currentUser }) => {
         setSelectedUserForBusiness(user)
         setBusinessAssignmentModalOpen(true)
     }
-
-    // ... rest of the helper functions ...
 
     const handleSelectAll = (event) => {
         if (event.target.checked) {
@@ -130,7 +133,6 @@ const AdminUsersTable = ({ onViewReviews, user: currentUser }) => {
             </Box>
         )
     }
-
 
     const filteredRows = rows.filter(row =>
         (row.username || '').toLowerCase().includes(search.toLowerCase()) ||
@@ -190,6 +192,9 @@ const AdminUsersTable = ({ onViewReviews, user: currentUser }) => {
                             <TableCell sx={{ color: '#fff' }}><strong>Role</strong></TableCell>
                             <TableCell sx={{ color: '#fff' }} align="center">
                                 <strong>Total Reviews</strong>
+                            </TableCell>
+                            <TableCell sx={{ color: '#fff' }} align="center">
+                                <strong>Total Location</strong>
                             </TableCell>
                             <TableCell sx={{ color: '#fff' }}>
                                 <strong>Joined At</strong>
@@ -285,6 +290,9 @@ const AdminUsersTable = ({ onViewReviews, user: currentUser }) => {
                                 <TableCell sx={{ color: '#ddd' }} align="center">
                                     {row.total_reviews || 0}
                                 </TableCell>
+                                <TableCell sx={{ color: '#ddd' }} align="center">
+                                    {row.assigned_businesses?.length || 0}
+                                </TableCell>
 
                                 <TableCell sx={{ color: '#ddd' }}>
                                     {row.createdAt ? new Date(row.createdAt).toLocaleDateString() : 'N/A'}
@@ -333,14 +341,33 @@ const AdminUsersTable = ({ onViewReviews, user: currentUser }) => {
                                             </IconButton>
                                         )}
                                         {(isAdmin || isSuperAdmin) && row.role === 'user' && (
-                                            <IconButton
-                                                onClick={() => handleOpenBusinessAssignment(row)}
-                                                sx={{ color: '#ffc107' }}
-                                                title="Assign Businesses"
-                                            >
-                                                <BusinessIcon />
-                                            </IconButton>
+                                            <>
+                                                <IconButton
+                                                    onClick={() => handleOpenBusinessAssignment(row)}
+                                                    sx={{ color: '#ffc107' }}
+                                                    title="Assign Businesses"
+                                                >
+                                                    <BusinessIcon />
+                                                </IconButton>
+                                                <IconButton
+                                                    onClick={() => {
+                                                        setSelectedUserForScope(row)
+                                                        setScopeModalOpen(true)
+                                                    }}
+                                                    sx={{ color: '#00bcd4' }}
+                                                    title="Assign Scopes"
+                                                >
+                                                    <VpnKeyIcon />
+                                                </IconButton>
+                                            </>
                                         )}
+                                        <IconButton
+                                            onClick={() => onViewGbpUpdates(row)}
+                                            sx={{ color: '#ff5722' }}
+                                            title="View GBP Updates"
+                                        >
+                                            <CalendarMonthIcon />
+                                        </IconButton>
                                         <IconButton
                                             onClick={() => onViewReviews(row)}
                                             sx={{ color: '#2196f3' }}
@@ -373,6 +400,12 @@ const AdminUsersTable = ({ onViewReviews, user: currentUser }) => {
                 open={businessAssignmentModalOpen}
                 onClose={() => setBusinessAssignmentModalOpen(false)}
                 user={selectedUserForBusiness}
+            />
+
+            <ScopeAssignmentModal
+                open={scopeModalOpen}
+                onClose={() => setScopeModalOpen(false)}
+                user={selectedUserForScope}
             />
 
             {/* 📄 Pagination */}

@@ -38,6 +38,17 @@ import PaymentsIcon from '@mui/icons-material/Payments'
 import DoneAllIcon from '@mui/icons-material/DoneAll'
 import MoneyOffIcon from '@mui/icons-material/MoneyOff'
 
+const StatItem = ({ label, value, color = '#fff' }) => (
+    <Box sx={{ textAlign: 'center', px: 2, borderRight: '1px solid #333', '&:last-child': { borderRight: 'none' } }}>
+        <Typography variant="caption" sx={{ color: '#aaa', textTransform: 'uppercase', letterSpacing: 1 }}>
+            {label}
+        </Typography>
+        <Typography variant="h6" sx={{ color, fontWeight: 'bold' }}>
+            {value}
+        </Typography>
+    </Box>
+)
+
 export default function BusinessReviewTable({ onEdit, setShowModal, userId, isAdmin = false }) {
     const [search, setSearch] = useState('')
     const [page, setPage] = useState(0)
@@ -206,17 +217,6 @@ export default function BusinessReviewTable({ onEdit, setShowModal, userId, isAd
 
     const filteredRows = rows.filter(row =>
         (row.business_id?.business_name || '').toLowerCase().includes(search.toLowerCase())
-    )
-
-    const StatItem = ({ label, value, color = '#fff' }) => (
-        <Box sx={{ textAlign: 'center', px: 2, borderRight: '1px solid #333', '&:last-child': { borderRight: 'none' } }}>
-            <Typography variant="caption" sx={{ color: '#aaa', textTransform: 'uppercase', letterSpacing: 1 }}>
-                {label}
-            </Typography>
-            <Typography variant="h6" sx={{ color, fontWeight: 'bold' }}>
-                {value}
-            </Typography>
-        </Box>
     )
 
     return (
