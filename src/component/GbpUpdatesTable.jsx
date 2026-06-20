@@ -44,9 +44,10 @@ export default function GbpUpdatesTable({ selectedUser }) {
     const [modalOpen, setModalOpen] = useState(false)
     const [selectedBusiness, setSelectedBusiness] = useState(null)
     const [selectedUpdate, setSelectedUpdate] = useState(null)
-    
+
     // Filtering, Sorting and Pagination States
     const [selectedLocation, setSelectedLocation] = useState('all')
+    const [selectedStatus, setSelectedStatus] = useState('all')
     const [sortBy, setSortBy] = useState('name') // 'name', 'location'
     const [sortOrder, setSortOrder] = useState('asc') // 'asc', 'desc'
     const [page, setPage] = useState(0)
@@ -62,7 +63,7 @@ export default function GbpUpdatesTable({ selectedUser }) {
 
     // Reset page on search or filter change during render to prevent cascading renders
     const [lastFilterKey, setLastFilterKey] = useState('')
-    const currentFilterKey = `${debouncedSearch}-${selectedLocation}-${sortBy}-${sortOrder}-${month}`
+    const currentFilterKey = `${debouncedSearch}-${selectedLocation}-${selectedStatus}-${sortBy}-${sortOrder}-${month}`
     if (lastFilterKey !== currentFilterKey) {
         setPage(0)
         setLastFilterKey(currentFilterKey)
@@ -110,7 +111,7 @@ export default function GbpUpdatesTable({ selectedUser }) {
                 const bId = u.business_id?._id || u.business_id
                 const matchesBusiness = bId && bId.toString() === business._id.toString()
                 if (!matchesBusiness) return false
-                
+
                 // If viewing a specific user, filter records created for that user
                 if (selectedUser) {
                     const uId = u.user_id?._id || u.user_id
@@ -145,7 +146,7 @@ export default function GbpUpdatesTable({ selectedUser }) {
             const loc = (row.business.location || '').toLowerCase()
             const code = (row.business.short_code || '').toLowerCase()
             const searchLower = debouncedSearch.toLowerCase()
-            
+
             return name.includes(searchLower) || loc.includes(searchLower) || code.includes(searchLower)
         })
 
@@ -153,10 +154,14 @@ export default function GbpUpdatesTable({ selectedUser }) {
             filtered = filtered.filter(row => row.business.location === selectedLocation)
         }
 
+        if (selectedStatus !== 'all') {
+            filtered = filtered.filter(row => (row.update.status || 'pending') === selectedStatus)
+        }
+
         filtered.sort((a, b) => {
             let valA = ''
             let valB = ''
-            
+
             if (sortBy === 'name') {
                 valA = a.business.business_name || ''
                 valB = b.business.business_name || ''
@@ -165,13 +170,13 @@ export default function GbpUpdatesTable({ selectedUser }) {
                 valB = b.business.location || ''
             }
 
-            return sortOrder === 'asc' 
-                ? valA.localeCompare(valB) 
+            return sortOrder === 'asc'
+                ? valA.localeCompare(valB)
                 : valB.localeCompare(valA)
         })
 
         return filtered
-    }, [mergedRows, debouncedSearch, selectedLocation, sortBy, sortOrder])
+    }, [mergedRows, debouncedSearch, selectedLocation, selectedStatus, sortBy, sortOrder])
 
     // Compute or load summary statistics (calculate on frontend if viewing a target user)
     const displaySummary = React.useMemo(() => {
@@ -437,6 +442,23 @@ export default function GbpUpdatesTable({ selectedUser }) {
                         <MenuItem value="location-desc">Location (Z-A)</MenuItem>
                     </Select>
                 </FormControl>
+
+                {/* Status Filter */}
+                <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 160 } }}>
+                    <Select
+                        value={selectedStatus}
+                        onChange={(e) => setSelectedStatus(e.target.value)}
+                        sx={selectStyle}
+                        MenuProps={menuPropsStyle}
+                    >
+                        <MenuItem value="all">All Statuses</MenuItem>
+                        <MenuItem value="pending">Pending</MenuItem>
+                        <MenuItem value="in_progress">In Progress</MenuItem>
+                        <MenuItem value="completed">Completed</MenuItem>
+                        <MenuItem value="suspended">Suspended</MenuItem>
+                        <MenuItem value="404">404</MenuItem>
+                    </Select>
+                </FormControl>
             </Box>
 
             {/* 📋 Table */}
@@ -457,6 +479,7 @@ export default function GbpUpdatesTable({ selectedUser }) {
                                 <TableCell sx={{ color: '#fff' }} align="center"><strong>Scheduled</strong></TableCell>
                                 <TableCell sx={{ color: '#fff' }} align="center"><strong>Status</strong></TableCell>
                                 <TableCell sx={{ color: '#fff' }}><strong>Remark</strong></TableCell>
+                                <TableCell sx={{ color: '#fff' }} align="center"><strong>Link</strong></TableCell>
                                 <TableCell sx={{ color: '#fff' }} align="center"><strong>Action</strong></TableCell>
                             </TableRow>
                         </TableHead>
@@ -481,15 +504,15 @@ export default function GbpUpdatesTable({ selectedUser }) {
                                                     {update._id && update.user_id && ` | User: ${update.user_id.username || update.user_id.email.split('@')[0]}`}
                                                 </Typography>
                                             </TableCell>
-                                            
+
                                             <TableCell sx={{ color: update.product_count > 0 ? '#4caf50' : '#888' }}>
                                                 {update.product_count > 0 ? `Done(${update.product_count})` : 'Pending'}
                                             </TableCell>
-                                            
+
                                             <TableCell sx={{ color: update.service_count > 0 ? '#4caf50' : '#888' }}>
                                                 {update.service_count > 0 ? `Done(${update.service_count})` : 'Pending'}
                                             </TableCell>
-                                            
+
                                             <TableCell sx={{ color: update.media_count > 0 ? '#4caf50' : '#888' }}>
                                                 {update.media_count > 0 ? `Done(${update.media_count})` : 'Pending'}
                                             </TableCell>
@@ -525,6 +548,20 @@ export default function GbpUpdatesTable({ selectedUser }) {
                                                 {update.remarks || '-'}
                                             </TableCell>
 
+                                            <TableCell sx={{ color: '#aaa', fontSize: '0.85rem', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={update.remarks}>
+                                                {business.business_link && (
+                                                    <IconButton
+                                                        component="a"
+                                                        href={business.business_link}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        sx={{ color: '#4caf50' }}
+                                                        title="View Business Profile Link"
+                                                    >
+                                                        <LinkIcon sx={{ fontSize: 22 }} />
+                                                    </IconButton>
+                                                )}
+                                            </TableCell>
                                             <TableCell align="center">
                                                 <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
                                                     <IconButton
@@ -541,18 +578,6 @@ export default function GbpUpdatesTable({ selectedUser }) {
                                                             title="Clear monthly record data"
                                                         >
                                                             <DeleteIcon sx={{ fontSize: 20 }} />
-                                                        </IconButton>
-                                                    )}
-                                                    {business.business_link && (
-                                                        <IconButton
-                                                            component="a"
-                                                            href={business.business_link}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            sx={{ color: '#4caf50' }}
-                                                            title="View Business Profile Link"
-                                                        >
-                                                            <LinkIcon sx={{ fontSize: 20 }} />
                                                         </IconButton>
                                                     )}
                                                     {update.update_link && (

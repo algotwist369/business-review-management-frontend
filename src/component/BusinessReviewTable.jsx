@@ -37,6 +37,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import PaymentsIcon from '@mui/icons-material/Payments'
 import DoneAllIcon from '@mui/icons-material/DoneAll'
 import MoneyOffIcon from '@mui/icons-material/MoneyOff'
+import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 
 const StatItem = ({ label, value, color = '#fff' }) => (
     <Box sx={{ textAlign: 'center', px: 2, borderRight: '1px solid #333', '&:last-child': { borderRight: 'none' } }}>
@@ -74,6 +75,7 @@ export default function BusinessReviewTable({ onEdit, setShowModal, userId, isAd
     const isBulkPaymentUpdating = markAsPaidCustomDateMutation.isPending || markAsUnpaidCustomDateMutation.isPending
 
     const rows = data?.data || []
+    console.log('rows', rows)
     const totalCount = data?.total_business || 0
     const stats = {
         totalReviews: data?.total_review_count || 0,
@@ -433,6 +435,9 @@ export default function BusinessReviewTable({ onEdit, setShowModal, userId, isAd
                                 <strong>Last Updated</strong>
                             </TableCell>
                             <TableCell sx={{ color: '#fff' }} align="center">
+                                <strong>Business Link</strong>
+                            </TableCell>
+                            <TableCell sx={{ color: '#fff' }} align="center">
                                 <strong>Action</strong>
                             </TableCell>
                         </TableRow>
@@ -504,6 +509,19 @@ export default function BusinessReviewTable({ onEdit, setShowModal, userId, isAd
                                 </TableCell>
                                 <TableCell sx={{ color: '#aaa', fontSize: '0.75rem' }}>
                                     {row.updatedAt ? new Date(row.updatedAt).toLocaleString() : 'N/A'}
+                                </TableCell>
+                                <TableCell align="center">
+                                    {row.business_id?.business_link ? (
+                                        <IconButton
+                                            component="a"
+                                            href={row.business_id.business_link}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            sx={{ color: '#2196f3' }}
+                                        >
+                                            <OpenInNewIcon />
+                                        </IconButton>
+                                    ) : '-'}
                                 </TableCell>
                                 <TableCell align="center">
                                     <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
